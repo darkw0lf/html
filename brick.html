@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Arcade Breakout Retro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        /* --- STYLE RETRO --- */
+        body {
+            background-color: #111;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            font-family: 'Press Start 2P', cursive;
+            overflow: hidden;
+        }
+
+        /* Conteneur du jeu pour l'effet CRT */
+        #game-container {
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            border: 4px solid #333;
+            border-radius: 10px;
+        }
+
+        canvas {
+            background-color: #000;
+            display: block;
+        }
+
+        /* Effet de scanlines (lignes TV) */
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            pointer-events: none; /* Laisse passer les clics */
+            z-index: 10;
+        }
+
+        /* Petit effet de lueur interne */
+        .glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.7);
+            pointer-events: none;
+            z-index: 11;
+        }
+
+        #start-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #0ff;
+            text-shadow: 2px 2px #f0f;
+            z-index: 20;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <canvas id="myCanvas" width="800" height="600"></canvas>
+    <div class="scanlines"></div>
+    <div class="glow"></div>
+    <div id="start-message">CLIQUEZ POUR JOUER<br><span style="font-size: 0.6em; color: #fff;">SOURIS OU FLÈCHES POUR BOUGER</span></div>
+</div>
+
+<script>
+    // --- LOGIQUE DU JEU ---
+
+    const canvas = document.getElementById("myCanvas");
+    const ctx = canvas.getContext("2d");
+    const startMsg = document.getElementById("start-message");
+
+    // Variables de la balle
+    let x = canvas.width / 2;
+    let y = canvas.height - 30;
+    let dx = 4;
+    let dy = -4;
+    const ballRadius = 8;
+
+    // Variables de la raquette
+    const paddleHeight = 15;
+    const paddleWidth = 100;
+    let paddleX = (canvas.width - paddleWidth) / 2;
+
+    // Contrôles
+    let rightPressed = false;
+    let leftPressed = false;
+    let gameRunning = false;
+
+    // Variables des briques
+    const brickRowCount = 5;
+    const brickColumnCount = 9;
+    const brickWidth = 70;
+    const brickHeight = 20;
+    const brickPadding = 15;
+    const brickOffsetTop = 50;
+    const brickOffsetLeft = 25;
+
+    // Score et Vies
+    let score = 0;
+    let lives = 3;
+
+    // Création du tableau de briques
+    const bricks = [];
+    for (let c = 0; c < brickColumnCount; c++) {
+        bricks[c] = [];
+        for (let r = 0; r < brickRowCount; r++) {
+            bricks[c][r] = { x: 0, y: 0, status: 1 };
+        }
+    }
+
+    // Écouteurs d'événements
+    document.addEventListener("keydown", keyDownHandler, false);
+    document.addEventListener("keyup", keyUpHandler, false);
+    document.addEventListener("mousemove", mouseMoveHandler, false);
+    canvas.addEventListener("click", startGame, false);
+    startMsg.addEventListener("click", startGame, false);
+
+    function startGame() {
+        if (!gameRunning) {
+            gameRunning = true;
+            startMsg.style.display = "none";
+            draw();
+        }
+    }
+
+    function keyDownHandler(e) {
+        if (e.key === "Right" || e.key === "ArrowRight") {
+            rightPressed = true;
+        } else if (e.key === "Left" || e.key === "ArrowLeft") {
+            leftPressed = true;
+        }
+    }
+
+    function keyUpHandler(e) {
+        if (e.key === "Right" || e.key === "ArrowRight") {
+            rightPressed = false;
+        } else if (e.key === "Left" || e.key === "ArrowLeft") {
+            leftPressed = false;
+        }
+    }
+
+    function mouseMoveHandler(e) {
+        const relativeX = e.clientX - canvas.getBoundingClientRect().left;
+        if (relativeX > 0 && relativeX < canvas.width) {
+            paddleX = relativeX - paddleWidth / 2;
+        }
+    }
+
+    function collisionDetection() {
+        for (let c = 0; c < brickColumnCount; c++) {
+            for (let r = 0; r < brickRowCount; r++) {
+                const b = bricks[c][r];
+                if (b.status === 1) {
+                    if (x > b.x && x < b.x + brickWidth && y > b.y && y < b.y + brickHeight) {
+                        dy = -dy;
+                        b.status = 0;
+                        score++;
+                        // Augmenter la vitesse légèrement à chaque brique cassée
+                        if(score % 5 === 0) {
+                             dx = dx > 0 ? dx + 0.5 : dx - 0.5;
+                             dy = dy > 0 ? dy + 0.5 : dy - 0.5;
+                        }
+
+                        if (score === brickRowCount * brickColumnCount) {
+                            alert("C'EST GAGNÉ, BRAVO !");
+                            document.location.reload();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function drawBall() {
+        ctx.beginPath();
+        ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+        ctx.fillStyle = "#fff"; // Blanc pur pour la balle
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = "#fff";
+        ctx.fill();
+        ctx.closePath();
+        ctx.shadowBlur = 0; // Reset shadow
+    }
+
+    function drawPaddle() {
+        ctx.beginPath();
+        ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
+        ctx.fillStyle = "#0ff"; // Cyan néon
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = "#0ff";
+        ctx.fill();
+        ctx.closePath();
+        ctx.shadowBlur = 0;
+    }
+
+    function drawBricks() {
+        for (let c = 0; c < brickColumnCount; c++) {
+            for (let r = 0; r < brickRowCount; r++) {
+                if (bricks[c][r].status === 1) {
+                    const brickX = (c * (brickWidth + brickPadding)) + brickOffsetLeft;
+                    const brickY = (r * (brickHeight + brickPadding)) + brickOffsetTop;
+                    bricks[c][r].x = brickX;
+                    bricks[c][r].y = brickY;
+                    ctx.beginPath();
+                    ctx.rect(brickX, brickY, brickWidth, brickHeight);
+
+                    // Couleurs alternées par rangée
+                    if (r === 0) ctx.fillStyle = "#ff0000"; // Rouge
+                    else if (r === 1) ctx.fillStyle = "#ff7f00"; // Orange
+                    else if (r === 2) ctx.fillStyle = "#ffff00"; // Jaune
+                    else if (r === 3) ctx.fillStyle = "#00ff00"; // Vert
+                    else ctx.fillStyle = "#0000ff"; // Bleu
+
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            }
+        }
+    }
+
+    function drawScore() {
+        ctx.font = "16px 'Press Start 2P'";
+        ctx.fillStyle = "#fff";
+        ctx.fillText("Score: " + score, 8, 25);
+    }
+
+    function drawLives() {
+        ctx.font = "16px 'Press Start 2P'";
+        ctx.fillStyle = "#fff";
+        ctx.fillText("Vies: " + lives, canvas.width - 130, 25);
+    }
+
+    function draw() {
+        // Effacer le canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        drawBricks();
+        drawBall();
+        drawPaddle();
+        drawScore();
+        drawLives();
+        collisionDetection();
+
+        // Rebond murs latéraux
+        if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
+            dx = -dx;
+        }
+
+        // Rebond plafond
+        if (y + dy < ballRadius) {
+            dy = -dy;
+        } else if (y + dy > canvas.height - ballRadius - paddleHeight + 5) { // Niveau raquette
+             // Collision raquette
+            if (x > paddleX && x < paddleX + paddleWidth) {
+                // Effet d'angle selon où on tape la raquette
+                let collidePoint = x - (paddleX + paddleWidth/2);
+                collidePoint = collidePoint / (paddleWidth/2);
+
+                // Angle maximum de 60 degrés (Pi/3)
+                let angle = collidePoint * (Math.PI/3);
+
+                // Vitesse constante, change juste la direction
+                let speed = Math.sqrt(dx*dx + dy*dy);
+
+                dx = speed * Math.sin(angle);
+                dy = -speed * Math.cos(angle);
+            }
+            else if (y + dy > canvas.height - ballRadius) {
+                // Perdu une vie
+                lives--;
+                if (!lives) {
+                    alert("GAME OVER");
+                    document.location.reload();
+                } else {
+                    x = canvas.width / 2;
+                    y = canvas.height - 30;
+                    dx = 4;
+                    dy = -4;
+                    paddleX = (canvas.width - paddleWidth) / 2;
+                }
+            }
+        }
+
+        // Déplacement balle
+        x += dx;
+        y += dy;
+
+        // Déplacement raquette clavier
+        if (rightPressed && paddleX < canvas.width - paddleWidth) {
+            paddleX += 7;
+        } else if (leftPressed && paddleX > 0) {
+            paddleX -= 7;
+        }
+
+        if(gameRunning) {
+            requestAnimationFrame(draw);
+        }
+    }
+
+    // Premier rendu statique
+    drawBricks();
+    drawPaddle();
+    drawScore();
+    drawLives();
+
+</script>
+
+</body>
+</html>
