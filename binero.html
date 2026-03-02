@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Binero</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --panel: #12121a;
+    --card: #1a1a26;
+    --border: #2a2a3a;
+    --accent: #00e5ff;
+    --accent2: #ff6b35;
+    --zero: #00e5ff;
+    --one: #ff6b35;
+    --text: #e8e8f0;
+    --muted: #5a5a7a;
+    --success: #00ff88;
+    --error: #ff3366;
+    --cell: 52px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse 60% 40% at 20% 20%, rgba(0,229,255,0.04) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 50% at 80% 80%, rgba(255,107,53,0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 520px;
+    padding: 20px 16px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  /* Header */
+  header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+  }
+
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+  }
+
+  .logo-0 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--zero);
+    text-shadow: 0 0 20px rgba(0,229,255,0.5);
+    letter-spacing: -1px;
+  }
+
+  .logo-1 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--one);
+    text-shadow: 0 0 20px rgba(255,107,53,0.5);
+    letter-spacing: -1px;
+  }
+
+  .logo-text {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-left: 8px;
+    align-self: center;
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+
+  .stat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-top: 2px;
+  }
+
+  /* Difficulty selector */
+  .difficulty-row {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 6px;
+  }
+
+  .diff-btn {
+    flex: 1;
+    padding: 8px 4px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .diff-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  .diff-btn:hover:not(.active) {
+    color: var(--text);
+  }
+
+  /* Grid container */
+  .grid-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .grid-frame {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .grid-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(0,229,255,0.03) 0%, transparent 50%, rgba(255,107,53,0.03) 100%);
+    pointer-events: none;
+  }
+
+  .grid {
+    display: grid;
+    gap: 4px;
+  }
+
+  /* Cell */
+  .cell {
+    width: var(--cell);
+    height: var(--cell);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 2px solid transparent;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    background: var(--panel);
+  }
+
+  .cell:not(.given):hover {
+    transform: scale(1.08);
+    border-color: var(--muted);
+  }
+
+  .cell:not(.given):active {
+    transform: scale(0.94);
+  }
+
+  .cell.given {
+    cursor: default;
+    opacity: 0.75;
+  }
+
+  .cell.val-0 {
+    color: var(--zero);
+    background: rgba(0,229,255,0.08);
+    border-color: rgba(0,229,255,0.25);
+    text-shadow: 0 0 12px rgba(0,229,255,0.4);
+  }
+
+  .cell.val-1 {
+    color: var(--one);
+    background: rgba(255,107,53,0.08);
+    border-color: rgba(255,107,53,0.25);
+    text-shadow: 0 0 12px rgba(255,107,53,0.4);
+  }
+
+  .cell.given.val-0 {
+    background: rgba(0,229,255,0.15);
+    border-color: rgba(0,229,255,0.4);
+  }
+
+  .cell.given.val-1 {
+    background: rgba(255,107,53,0.15);
+    border-color: rgba(255,107,53,0.4);
+  }
+
+  .cell.error {
+    animation: shake 0.3s ease;
+    border-color: var(--error) !important;
+    background: rgba(255,51,102,0.15) !important;
+  }
+
+  .cell.empty {
+    color: var(--muted);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+
+  @keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+
+  .cell.pop {
+    animation: pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Message overlay */
+  .message {
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(8px);
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .message.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .message-icon {
+    font-size: 3rem;
+    margin-bottom: 8px;
+  }
+
+  .message-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--success);
+    margin-bottom: 4px;
+  }
+
+  .message-sub {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    margin-bottom: 20px;
+  }
+
+  /* Buttons */
+  .btn-row {
+    width: 100%;
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 14px 12px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.18s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .btn:hover {
+    border-color: var(--muted);
+    transform: translateY(-1px);
+  }
+
+  .btn:active {
+    transform: translateY(1px);
+  }
+
+  .btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+  }
+
+  .btn.primary:hover {
+    background: #33ecff;
+    border-color: #33ecff;
+  }
+
+  .btn.danger {
+    border-color: rgba(255,51,102,0.3);
+    color: var(--error);
+  }
+
+  .btn.danger:hover {
+    border-color: var(--error);
+    background: rgba(255,51,102,0.1);
+  }
+
+  /* Rules */
+  .rules-card {
+    width: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+
+  .rules-title {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .rule {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 6px;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: #9090b0;
+  }
+
+  .rule-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent);
+    background: rgba(0,229,255,0.1);
+    padding: 1px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* Timer pulse when running */
+  @keyframes pulse-glow {
+    0%, 100% { text-shadow: none; }
+    50% { text-shadow: 0 0 12px rgba(0,229,255,0.6); }
+  }
+
+  .stat-value.running {
+    animation: pulse-glow 1.5s ease-in-out infinite;
+  }
+
+  /* Victory stars */
+  @keyframes star-float {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-60px) scale(0); opacity: 0; }
+  }
+
+  .confetti-dot {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    animation: star-float 1s ease-out forwards;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <span class="logo-0">0</span>
+      <span class="logo-1">1</span>
+      <span class="logo-text">Binero</span>
+    </div>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat">
+      <div class="stat-value" id="timer-display">00:00</div>
+      <div class="stat-label">Temps</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="errors-display">0</div>
+      <div class="stat-label">Erreurs</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="progress-display">0%</div>
+      <div class="stat-label">Avancement</div>
+    </div>
+  </div>
+
+  <!-- Difficulty -->
+  <div class="difficulty-row">
+    <button class="diff-btn active" data-size="6" onclick="setDifficulty(this, 6)">6×6</button>
+    <button class="diff-btn" data-size="8" onclick="setDifficulty(this, 8)">8×8</button>
+    <button class="diff-btn" data-size="10" onclick="setDifficulty(this, 10)">10×10</button>
+    <button class="diff-btn" data-size="12" onclick="setDifficulty(this, 12)">12×12</button>
+  </div>
+
+  <!-- Grid -->
+  <div class="grid-wrapper">
+    <div class="grid-frame">
+      <div class="grid" id="grid"></div>
+      <div class="message" id="win-message">
+        <div class="message-icon">🎉</div>
+        <div class="message-title">BRAVO !</div>
+        <div class="message-sub" id="win-time">Complété en 00:00</div>
+        <button class="btn primary" onclick="newGame()" style="width:140px">Rejouer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="btn-row">
+    <button class="btn" onclick="newGame()">↺ Nouveau</button>
+    <button class="btn" onclick="getHint()">💡 Indice</button>
+    <button class="btn danger" onclick="resetGrid()">✕ Effacer</button>
+  </div>
+
+  <!-- Rules -->
+  <div class="rules-card">
+    <div class="rules-title">Règles du jeu</div>
+    <div class="rule"><span class="rule-num">01</span>Remplissez chaque case avec <span style="color:var(--zero);margin:0 3px">0</span> ou <span style="color:var(--one);margin:0 3px">1</span></div>
+    <div class="rule"><span class="rule-num">02</span>Chaque ligne et colonne contient autant de 0 que de 1</div>
+    <div class="rule"><span class="rule-num">03</span>Pas plus de deux chiffres identiques consécutifs (horizontalement ou verticalement)</div>
+    <div class="rule"><span class="rule-num">04</span>Deux lignes ou colonnes ne peuvent pas être identiques</div>
+  </div>
+
+</div>
+
+<script>
+let gridSize = 6;
+let solution = [];
+let board = [];     // null = empty, 0 or 1
+let given = [];     // bool
+let errors = 0;
+let timerInterval = null;
+let seconds = 0;
+let gameOver = false;
+
+function setDifficulty(btn, size) {
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  gridSize = size;
+  // Adjust cell size
+  const cellSize = size <= 6 ? 56 : size <= 8 ? 48 : size <= 10 ? 42 : 36;
+  document.documentElement.style.setProperty('--cell', cellSize + 'px');
+  newGame();
+}
+
+// ---- Puzzle generation ----
+function generateSolution(n) {
+  const grid = Array.from({length: n}, () => new Array(n).fill(-1));
+  if (!fillGrid(grid, n, 0)) return null;
+  return grid;
+}
+
+function rowToString(grid, r) {
+  return grid[r].join('');
+}
+function colToString(grid, c, n) {
+  return Array.from({length: n}, (_,r) => grid[r][c]).join('');
+}
+
+function isValid(grid, r, c, val, n) {
+  grid[r][c] = val;
+  // No 3 consecutive same in row
+  const row = grid[r];
+  for (let i = 0; i <= n - 3; i++) {
+    if (row[i] !== -1 && row[i] === row[i+1] && row[i+1] === row[i+2]) { grid[r][c] = -1; return false; }
+  }
+  // No 3 consecutive same in col
+  for (let i = 0; i <= n - 3; i++) {
+    if (grid[i][c] !== -1 && grid[i][c] === (i+1 < n ? grid[i+1][c] : -99) && grid[i+1][c] === (i+2 < n ? grid[i+2][c] : -99)) {
+      // recheck
+    }
+  }
+  const col = Array.from({length: n}, (_,i) => grid[i][c]);
+  for (let i = 0; i <= n - 3; i++) {
+    if (col[i] !== -1 && col[i] === col[i+1] && col[i+1] === col[i+2]) { grid[r][c] = -1; return false; }
+  }
+  // Count in row
+  const rowFull = row.filter(v => v !== -1);
+  const ones = rowFull.filter(v => v === 1).length;
+  const zeros = rowFull.filter(v => v === 0).length;
+  if (ones > n/2 || zeros > n/2) { grid[r][c] = -1; return false; }
+  // Count in col
+  const colFull = col.filter(v => v !== -1);
+  const ones2 = colFull.filter(v => v === 1).length;
+  const zeros2 = colFull.filter(v => v === 0).length;
+  if (ones2 > n/2 || zeros2 > n/2) { grid[r][c] = -1; return false; }
+
+  grid[r][c] = -1;
+  return true;
+}
+
+function fillGrid(grid, n, pos) {
+  if (pos === n * n) {
+    // Check no duplicate rows/cols
+    const rows = Array.from({length: n}, (_, r) => grid[r].join(''));
+    if (new Set(rows).size !== n) return false;
+    const cols = Array.from({length: n}, (_, c) => Array.from({length: n}, (_, r) => grid[r][c]).join(''));
+    if (new Set(cols).size !== n) return false;
+    return true;
+  }
+  const r = Math.floor(pos / n);
+  const c = pos % n;
+  const vals = Math.random() < 0.5 ? [0, 1] : [1, 0];
+  for (const v of vals) {
+    if (isValid(grid, r, c, v, n)) {
+      grid[r][c] = v;
+      if (fillGrid(grid, n, pos + 1)) return true;
+      grid[r][c] = -1;
+    }
+  }
+  return false;
+}
+
+function createPuzzle(sol, n) {
+  // Reveal ~40-50% of cells
+  const revealCount = Math.floor(n * n * 0.45);
+  const positions = Array.from({length: n*n}, (_, i) => i);
+  // Shuffle
+  for (let i = positions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [positions[i], positions[j]] = [positions[j], positions[i]];
+  }
+  const revealed = new Set(positions.slice(0, revealCount));
+  const g = Array.from({length: n}, () => new Array(n).fill(null));
+  const giv = Array.from({length: n}, () => new Array(n).fill(false));
+  for (const pos of revealed) {
+    const r = Math.floor(pos / n);
+    const c = pos % n;
+    g[r][c] = sol[r][c];
+    giv[r][c] = true;
+  }
+  return { board: g, given: giv };
+}
+
+// ---- Rendering ----
+function renderGrid() {
+  const container = document.getElementById('grid');
+  container.style.gridTemplateColumns = `repeat(${gridSize}, var(--cell))`;
+  container.innerHTML = '';
+  
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+      
+      const val = board[r][c];
+      if (val !== null) {
+        cell.classList.add('val-' + val);
+        cell.textContent = val;
+      }
+      if (given[r][c]) {
+        cell.classList.add('given');
+      } else {
+        cell.addEventListener('click', () => handleClick(r, c));
+        cell.addEventListener('contextmenu', e => { e.preventDefault(); handleRightClick(r, c); });
+      }
+      container.appendChild(cell);
+    }
+  }
+}
+
+function updateCell(r, c) {
+  const cell = document.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+  if (!cell) return;
+  cell.className = 'cell';
+  if (given[r][c]) cell.classList.add('given');
+  
+  const val = board[r][c];
+  if (val !== null) {
+    cell.classList.add('val-' + val);
+    cell.textContent = val;
+    cell.classList.add('pop');
+    setTimeout(() => cell.classList.remove('pop'), 300);
+  } else {
+    cell.textContent = '';
+  }
+}
+
+function handleClick(r, c) {
+  if (gameOver) return;
+  const cur = board[r][c];
+  if (cur === null) {
+    board[r][c] = 0;
+  } else if (cur === 0) {
+    board[r][c] = 1;
+  } else {
+    board[r][c] = null;
+  }
+  updateCell(r, c);
+  validateCell(r, c);
+  updateProgress();
+  checkWin();
+}
+
+function handleRightClick(r, c) {
+  if (gameOver) return;
+  const cur = board[r][c];
+  if (cur === null) {
+    board[r][c] = 1;
+  } else if (cur === 1) {
+    board[r][c] = 0;
+  } else {
+    board[r][c] = null;
+  }
+  updateCell(r, c);
+  validateCell(r, c);
+  updateProgress();
+  checkWin();
+}
+
+function validateCell(r, c) {
+  if (board[r][c] === null) return;
+  const cell = document.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+  if (board[r][c] !== solution[r][c]) {
+    errors++;
+    document.getElementById('errors-display').textContent = errors;
+    cell.classList.add('error');
+    setTimeout(() => cell.classList.remove('error'), 500);
+    // Revert
+    setTimeout(() => {
+      board[r][c] = null;
+      updateCell(r, c);
+      updateProgress();
+    }, 300);
+  }
+}
+
+function updateProgress() {
+  const total = gridSize * gridSize;
+  let filled = 0;
+  for (let r = 0; r < gridSize; r++)
+    for (let c = 0; c < gridSize; c++)
+      if (board[r][c] !== null) filled++;
+  const pct = Math.round((filled / total) * 100);
+  document.getElementById('progress-display').textContent = pct + '%';
+}
+
+function checkWin() {
+  for (let r = 0; r < gridSize; r++)
+    for (let c = 0; c < gridSize; c++)
+      if (board[r][c] !== solution[r][c]) return;
+  
+  // Win!
+  gameOver = true;
+  stopTimer();
+  const el = document.getElementById('win-message');
+  document.getElementById('win-time').textContent = `Complété en ${formatTime(seconds)}`;
+  el.classList.add('show');
+  spawnConfetti();
+}
+
+function spawnConfetti() {
+  const frame = document.querySelector('.grid-frame');
+  const colors = ['#00e5ff','#ff6b35','#00ff88','#ff3366','#ffff00'];
+  for (let i = 0; i < 20; i++) {
+    setTimeout(() => {
+      const dot = document.createElement('div');
+      dot.className = 'confetti-dot';
+      dot.style.left = (20 + Math.random() * 60) + '%';
+      dot.style.top = (20 + Math.random() * 60) + '%';
+      dot.style.background = colors[Math.floor(Math.random() * colors.length)];
+      dot.style.animationDelay = (Math.random() * 0.3) + 's';
+      frame.appendChild(dot);
+      setTimeout(() => dot.remove(), 1500);
+    }, i * 50);
+  }
+}
+
+// ---- Timer ----
+function startTimer() {
+  stopTimer();
+  seconds = 0;
+  timerInterval = setInterval(() => {
+    seconds++;
+    document.getElementById('timer-display').textContent = formatTime(seconds);
+  }, 1000);
+  document.getElementById('timer-display').classList.add('running');
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  document.getElementById('timer-display').classList.remove('running');
+}
+
+function formatTime(s) {
+  const m = Math.floor(s / 60).toString().padStart(2, '0');
+  const sec = (s % 60).toString().padStart(2, '0');
+  return `${m}:${sec}`;
+}
+
+// ---- Actions ----
+function newGame() {
+  gameOver = false;
+  errors = 0;
+  document.getElementById('errors-display').textContent = '0';
+  document.getElementById('win-message').classList.remove('show');
+  
+  // Generate with timeout fallback
+  let sol = null;
+  let attempts = 0;
+  while (!sol && attempts < 10) {
+    sol = generateSolution(gridSize);
+    attempts++;
+  }
+  if (!sol) { alert("Impossible de générer une grille."); return; }
+  
+  solution = sol;
+  const puzzle = createPuzzle(sol, gridSize);
+  board = puzzle.board;
+  given = puzzle.given;
+  
+  renderGrid();
+  updateProgress();
+  startTimer();
+}
+
+function resetGrid() {
+  if (gameOver) return;
+  for (let r = 0; r < gridSize; r++)
+    for (let c = 0; c < gridSize; c++)
+      if (!given[r][c]) board[r][c] = null;
+  errors = 0;
+  document.getElementById('errors-display').textContent = '0';
+  renderGrid();
+  updateProgress();
+}
+
+function getHint() {
+  if (gameOver) return;
+  // Find a random empty cell
+  const empties = [];
+  for (let r = 0; r < gridSize; r++)
+    for (let c = 0; c < gridSize; c++)
+      if (!given[r][c] && board[r][c] === null) empties.push([r, c]);
+  
+  if (empties.length === 0) return;
+  const [r, c] = empties[Math.floor(Math.random() * empties.length)];
+  board[r][c] = solution[r][c];
+  given[r][c] = true; // mark as given so it can't be erased
+  updateCell(r, c);
+  // Re-add given class
+  const cell = document.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+  if (cell) { cell.classList.add('given'); cell.removeEventListener('click', null); }
+  updateProgress();
+  checkWin();
+}
+
+// Start
+newGame();
+</script>
+</body>
+</html>
