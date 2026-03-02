@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HelpDesk Simulator — Jeu de Rôle</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap');
+
+  :root {
+    --bg: #0a0d14;
+    --panel: #111520;
+    --border: #1e2535;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --success: #00e57a;
+    --warn: #ffcc00;
+    --danger: #ff3860;
+    --text: #c8d6e8;
+    --muted: #5a6a80;
+    --user-bg: #0d1a2e;
+    --tech-bg: #0d1f12;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER */
+  header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--panel);
+  }
+
+  header .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  header .logo span { color: var(--accent2); }
+
+  .status-bar {
+    display: flex;
+    gap: 20px;
+    margin-left: auto;
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  .status-item { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* SCENARIO SELECTOR */
+  #scenario-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    gap: 32px;
+  }
+
+  .screen-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #fff;
+    text-align: center;
+  }
+  .screen-title span { color: var(--accent); }
+
+  .scenario-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    max-width: 900px;
+    width: 100%;
+  }
+
+  .scenario-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .scenario-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+  }
+
+  .scenario-card.n1::before { background: var(--success); }
+  .scenario-card.n2::before { background: var(--warn); }
+  .scenario-card.n3::before { background: var(--danger); }
+  .scenario-card.sec::before { background: var(--accent); }
+
+  .scenario-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,212,255,0.1);
+  }
+
+  .scenario-card .badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 3px;
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+
+  .n1 .badge { background: rgba(0,229,122,0.15); color: var(--success); }
+  .n2 .badge { background: rgba(255,204,0,0.15); color: var(--warn); }
+  .n3 .badge { background: rgba(255,56,96,0.15); color: var(--danger); }
+  .sec .badge { background: rgba(0,212,255,0.15); color: var(--accent); }
+
+  .scenario-card h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .scenario-card p { font-size: 0.72rem; color: var(--muted); line-height: 1.6; }
+
+  /* MAIN SIMULATOR */
+  #simulator-screen {
+    flex: 1;
+    display: none;
+    flex-direction: column;
+    max-width: 100%;
+  }
+
+  .sim-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .ticket-info {
+    display: flex;
+    gap: 16px;
+    font-size: 0.7rem;
+    flex-wrap: wrap;
+  }
+
+  .ticket-info span { color: var(--muted); }
+  .ticket-info strong { color: var(--accent); }
+
+  .score-box {
+    margin-left: auto;
+    display: flex;
+    gap: 16px;
+    font-size: 0.75rem;
+  }
+
+  .score-item { text-align: center; }
+  .score-item .val { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; color: #fff; }
+  .score-item .lbl { color: var(--muted); font-size: 0.6rem; }
+
+  #back-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    transition: all 0.2s;
+  }
+  #back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* CHAT AREA */
+  .chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: calc(100vh - 160px);
+  }
+
+  #chat-log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  #chat-log::-webkit-scrollbar { width: 4px; }
+  #chat-log::-webkit-scrollbar-track { background: transparent; }
+  #chat-log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .msg {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg.user { flex-direction: row-reverse; }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    font-family: 'Syne', sans-serif;
+  }
+
+  .msg.user .avatar { background: rgba(255,107,53,0.2); color: var(--accent2); border: 1px solid rgba(255,107,53,0.3); }
+  .msg.tech .avatar { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+  .msg.system .avatar { background: rgba(90,106,128,0.2); color: var(--muted); border: 1px solid var(--border); }
+
+  .bubble {
+    max-width: 70%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    line-height: 1.7;
+  }
+
+  .msg.user .bubble { background: var(--user-bg); border: 1px solid rgba(255,107,53,0.2); color: #dce8f5; }
+  .msg.tech .bubble { background: var(--tech-bg); border: 1px solid rgba(0,212,255,0.15); color: #d0e8d4; }
+  .msg.system .bubble {
+    background: rgba(255,204,0,0.05);
+    border: 1px solid rgba(255,204,0,0.2);
+    color: var(--warn);
+    font-size: 0.7rem;
+    font-style: italic;
+  }
+
+  .msg-meta {
+    font-size: 0.6rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* FEEDBACK BUBBLE */
+  .feedback-bubble {
+    margin-top: 6px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.68rem;
+    line-height: 1.6;
+  }
+  .feedback-bubble.good { background: rgba(0,229,122,0.08); border: 1px solid rgba(0,229,122,0.2); color: var(--success); }
+  .feedback-bubble.ok { background: rgba(255,204,0,0.08); border: 1px solid rgba(255,204,0,0.2); color: var(--warn); }
+  .feedback-bubble.bad { background: rgba(255,56,96,0.08); border: 1px solid rgba(255,56,96,0.2); color: var(--danger); }
+
+  /* OPTIONS PANEL */
+  #options-panel {
+    border-top: 1px solid var(--border);
+    background: var(--panel);
+    padding: 16px 20px;
+  }
+
+  .options-label {
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .option-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    text-align: left;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .option-btn:hover { border-color: var(--accent); background: rgba(0,212,255,0.05); color: #fff; }
+  .option-btn .opt-key {
+    background: var(--border);
+    color: var(--muted);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    min-width: 24px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  /* RESULT SCREEN */
+  #result-screen {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    text-align: center;
+    gap: 24px;
+  }
+
+  .result-score {
+    font-family: 'Syne', sans-serif;
+    font-size: 5rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .result-grade {
+    font-size: 1rem;
+    color: var(--muted);
+  }
+
+  .result-breakdown {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .rb-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 16px 24px;
+    border-radius: 8px;
+    min-width: 120px;
+  }
+
+  .rb-item .v { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; }
+  .rb-item .l { font-size: 0.65rem; color: var(--muted); margin-top: 4px; }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 6px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+
+  .typing-indicator {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--tech-bg);
+    border: 1px solid rgba(0,212,255,0.15);
+    border-radius: 8px;
+    width: fit-content;
+  }
+  .typing-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); animation: typingBounce 1.2s infinite; }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">HELP<span>DESK</span>.sim</div>
+  <div class="status-bar">
+    <div class="status-item"><div class="dot"></div> Simulateur actif</div>
+    <div class="status-item">🎓 Formation ITIL v4</div>
+  </div>
+</header>
+
+<!-- SCENARIO SELECTION -->
+<div id="scenario-screen">
+  <div>
+    <div class="screen-title">Choisissez un <span>Scénario</span></div>
+    <div style="text-align:center;color:var(--muted);font-size:0.75rem;margin-top:8px;">
+      Vous jouez le rôle du technicien helpdesk. Répondez à l'utilisateur de manière professionnelle.
+    </div>
+  </div>
+  <div class="scenario-grid">
+    <div class="scenario-card n1" onclick="startScenario('pc_lent')">
+      <div class="badge">N1 — DÉBUTANT</div>
+      <h3>🖥️ PC Lent au Démarrage</h3>
+      <p>Un utilisateur se plaint que son PC met 10 minutes à démarrer. Collectez les infos et guidez-le vers une résolution.</p>
+    </div>
+    <div class="scenario-card n1" onclick="startScenario('mdp_oublie')">
+      <div class="badge">N1 — DÉBUTANT</div>
+      <h3>🔑 Mot de Passe Oublié</h3>
+      <p>Un employé ne peut plus se connecter à sa session Windows après le week-end. Gérez la demande selon les procédures.</p>
+    </div>
+    <div class="scenario-card n2" onclick="startScenario('imprimante')">
+      <div class="badge">N2 — INTERMÉDIAIRE</div>
+      <h3>🖨️ Imprimante Réseau HS</h3>
+      <p>L'imprimante partagée du service comptabilité ne répond plus. Plusieurs utilisateurs sont bloqués. Diagnostiquez.</p>
+    </div>
+    <div class="scenario-card n2" onclick="startScenario('vpn')">
+      <div class="badge">N2 — INTERMÉDIAIRE</div>
+      <h3>🌐 VPN Impossible</h3>
+      <p>Un commercial en télétravail ne peut pas se connecter au VPN de l'entreprise depuis ce matin. Urgence client.</p>
+    </div>
+    <div class="scenario-card n3" onclick="startScenario('ransomware')">
+      <div class="badge">N3 — AVANCÉ</div>
+      <h3>🚨 Suspicion Ransomware</h3>
+      <p>Un utilisateur signale des fichiers avec des extensions inconnues et un message étrange à l'écran. Réagissez !</p>
+    </div>
+    <div class="scenario-card sec" onclick="startScenario('phishing')">
+      <div class="badge">SEC — SÉCURITÉ</div>
+      <h3>🎣 Signalement Phishing</h3>
+      <p>Un utilisateur a reçu un email suspect demandant ses identifiants. Il a peut-être déjà cliqué sur le lien.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SIMULATOR -->
+<div id="simulator-screen" style="display:none;flex-direction:column;flex:1;">
+  <div class="sim-header">
+    <button id="back-btn" onclick="backToMenu()">← Menu</button>
+    <div class="ticket-info">
+      <div><span>TICKET#</span> <strong id="ticket-num">INC-0000</strong></div>
+      <div><span>Scénario:</span> <strong id="scenario-title">—</strong></div>
+      <div><span>Niveau:</span> <strong id="scenario-level">—</strong></div>
+    </div>
+    <div class="score-box">
+      <div class="score-item">
+        <div class="val" id="score-val">0</div>
+        <div class="lbl">POINTS</div>
+      </div>
+      <div class="score-item">
+        <div class="val" id="step-val">0/0</div>
+        <div class="lbl">ÉTAPES</div>
+      </div>
+    </div>
+  </div>
+  <div class="chat-container">
+    <div id="chat-log"></div>
+    <div id="options-panel">
+      <div class="options-label">💬 Votre réponse — Sélectionnez une option :</div>
+      <div class="options-grid" id="options-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="result-screen">
+  <div class="result-score" id="final-score-display">0</div>
+  <div class="result-grade" id="final-grade">—</div>
+  <div class="result-breakdown" id="result-breakdown"></div>
+  <div id="result-tips" style="max-width:500px;font-size:0.75rem;color:var(--muted);line-height:1.8;"></div>
+  <button class="btn-primary" onclick="backToMenu()">🔄 Rejouer</button>
+</div>
+
+<script>
+const SCENARIOS = {
+  pc_lent: {
+    title: "PC Lent au Démarrage",
+    level: "N1",
+    ticketNum: "INC-2847",
+    intro: "Bonjour, c'est encore moi, Thomas du service RH... Mon PC met une éternité à démarrer depuis lundi. Au moins 10 minutes ! Je ne peux rien faire le matin. C'est vraiment pénible.",
+    steps: [
+      {
+        situation: "Thomas a décrit son problème. Que faites-vous en premier ?",
+        options: [
+          { text: "Demander à Thomas de redémarrer son PC immédiatement pour voir si ça aide.", score: 0, quality: "bad", feedback: "❌ Redémarrer sans collecter d'infos n'est pas la bonne démarche. On risque de passer à côté de la cause réelle. Collectez toujours les informations AVANT d'agir." },
+          { text: "Créer un ticket, saluer professionnellement, et poser des questions de diagnostic : depuis quand, modifications récentes, erreurs visibles ?", score: 3, quality: "good", feedback: "✅ Excellent ! Créer un ticket, accueillir l'utilisateur et collecter les infos initiales est la bonne démarche ITIL. Vous avez démontré une bonne qualification de l'incident." },
+          { text: "Lui dire que c'est probablement un virus et escalader immédiatement au N3.", score: 0, quality: "bad", feedback: "❌ Escalader sans diagnostic préalable est une erreur. Épuisez les solutions N1 avant d'escalader. Ne faites pas de suppositions non étayées." },
+          { text: "Vérifier l'espace disque, la RAM utilisée et les programmes au démarrage via le Gestionnaire des tâches.", score: 2, quality: "ok", feedback: "⚠️ Bon réflexe technique, mais vous avez sauté l'étape de collecte d'infos et l'accueil. En support, la méthode compte autant que la solution." }
+        ],
+        userReply: {
+          good: "D'accord. Ça a commencé lundi dernier. Je n'ai rien installé moi-même. Par contre le service info a fait des mises à jour vendredi soir.",
+          ok: "Euh... je vais essayer. Donc je fais Ctrl+Alt+Suppr ?",
+          bad: "Un virus ?? Je suis inquiet maintenant ! C'est grave ?"
+        }
+      },
+      {
+        situation: "Thomas confirme que des mises à jour ont été faites vendredi. Quelle est votre prochaine action ?",
+        options: [
+          { text: "Demander à Thomas d'aller dans l'Observateur d'événements Windows pour chercher des erreurs au démarrage.", score: 1, quality: "ok", feedback: "⚠️ Correct techniquement, mais l'Observateur d'événements est complexe pour un utilisateur non-technique. Proposez une solution plus accessible en premier." },
+          { text: "Vérifier à distance (via le GLPI ou RDP) les programmes au démarrage et les logs Windows Update.", score: 3, quality: "good", feedback: "✅ Parfait ! Utiliser les outils de prise en main à distance montre de la proactivité et évite de mettre l'utilisateur en difficulté avec des manipulations complexes." },
+          { text: "Dire à Thomas que c'est sûrement lié aux mises à jour et qu'il faut attendre quelques jours.", score: 0, quality: "bad", feedback: "❌ Dire d'attendre sans investiguer n'est pas acceptable. L'utilisateur a un impact métier. Agissez !" },
+          { text: "Désactiver toutes les mises à jour automatiques et redémarrer le PC.", score: 0, quality: "bad", feedback: "❌ Désactiver les MAJ sans autorisation est contre la politique de sécurité. Ce n'est pas une solution appropriée." }
+        ],
+        userReply: {
+          good: "Oui allez-y ! Je vous donne accès. C'était quoi le problème ?",
+          ok: "Je ne trouve pas l'Observateur d'événements... Vous pouvez m'aider à le trouver ?",
+          bad: "Attendre ?! J'ai des rapports à rendre ! Vous ne pouvez pas faire quelque chose ?"
+        }
+      },
+      {
+        situation: "En examinant le PC, vous constatez que Windows Update a installé 3 MAJ importantes dont une KB problématique connue. Que faites-vous ?",
+        options: [
+          { text: "Désinstaller la mise à jour problématique, redémarrer et tester le temps de démarrage.", score: 3, quality: "good", feedback: "✅ Excellent diagnostic et action ciblée ! Vous avez identifié la cause racine et appliqué la solution appropriée. Communication claire avec l'utilisateur." },
+          { text: "Formater le PC et réinstaller Windows.", score: 0, quality: "bad", feedback: "❌ Le formatage est totalement disproportionné pour ce problème. Toujours chercher la solution la moins impactante pour l'utilisateur." },
+          { text: "Documenter la KB problématique, désinstaller la MAJ, tester, et informer l'équipe pour éviter le déploiement sur d'autres postes.", score: 3, quality: "good", feedback: "✅ PARFAIT ! Non seulement vous résolvez le problème, mais vous faites du Knowledge Management en informant l'équipe. C'est du support N2 niveau ITIL !" },
+          { text: "Contacter Microsoft pour signaler le bug.", score: 1, quality: "ok", feedback: "⚠️ Signaler à Microsoft peut être utile à terme, mais l'urgence est de résoudre le problème de Thomas maintenant. Priorisez la résolution immédiate." }
+        ],
+        userReply: {
+          good: "Super, le PC démarre maintenant en 45 secondes ! Merci beaucoup !",
+          ok: "Et maintenant mes données sont sauvegardées au moins ?",
+          bad: "Formater ?! J'ai des fichiers importants ! Non non non..."
+        }
+      },
+      {
+        situation: "Le problème est résolu. Thomas est soulagé. Comment clôturez-vous le ticket ?",
+        options: [
+          { text: "Fermer le ticket directement sans rien dire à Thomas.", score: 0, quality: "bad", feedback: "❌ Ne jamais fermer un ticket sans confirmation de l'utilisateur ! C'est une règle fondamentale du support." },
+          { text: "Informer Thomas de la résolution, lui demander de confirmer que tout fonctionne, documenter la solution dans le ticket, et demander son accord pour clôturer.", score: 3, quality: "good", feedback: "✅ Processus de clôture parfait ! Confirmation utilisateur + documentation + accord de clôture. Vous suivez ITIL à la lettre." },
+          { text: "Envoyer un email à Thomas avec un résumé de l'incident et la solution appliquée.", score: 2, quality: "ok", feedback: "⚠️ Bonne communication, mais n'oubliez pas de demander confirmation que tout fonctionne avant de clôturer formellement le ticket." },
+          { text: "Demander à Thomas de noter votre intervention, puis clôturer.", score: 1, quality: "ok", feedback: "⚠️ La satisfaction client est importante, mais la priorité est la confirmation de résolution et la documentation. La note est un bonus." }
+        ],
+        userReply: {
+          good: "Parfait ! Je confirme que tout fonctionne. Merci pour votre réactivité !",
+          ok: "Oui tout est bon. Merci.",
+          bad: "Euh... le ticket est fermé ? Mais vous n'avez pas vérifié avec moi !"
+        }
+      }
+    ]
+  },
+
+  ransomware: {
+    title: "Suspicion Ransomware",
+    level: "N3 — CRITIQUE",
+    ticketNum: "INC-9911",
+    intro: "AIDEZ-MOI ! Je ne comprends pas ce qui se passe ! Mes fichiers Word ont maintenant une extension bizarre '.enc' et il y a un message sur mon écran qui dit 'Vos fichiers ont été chiffrés. Envoyez 2 BTC pour récupérer vos données.' Je ne peux plus rien ouvrir !",
+    steps: [
+      {
+        situation: "Situation critique potentielle. Quelle est VOTRE PREMIÈRE ACTION IMMÉDIATE ?",
+        options: [
+          { text: "Demander à l'utilisateur de payer la rançon pour récupérer ses fichiers rapidement.", score: 0, quality: "bad", feedback: "❌ JAMAIS ! Payer une rançon n'est pas une garantie de récupération et encourage les cybercriminels. C'est aussi potentiellement illégal selon les juridictions." },
+          { text: "Dire à l'utilisateur de débrancher immédiatement le câble réseau et d'éteindre le Wi-Fi, puis de NE PAS éteindre le PC.", score: 3, quality: "good", feedback: "✅ RÉFLEXE PARFAIT ! Isolation réseau immédiate = arrêt de la propagation. Ne pas éteindre le PC permet de préserver des preuves forensiques en mémoire vive." },
+          { text: "Demander à l'utilisateur d'essayer de supprimer les fichiers .enc.", score: 0, quality: "bad", feedback: "❌ Supprimer les fichiers peut détruire des preuves et ne résout rien. L'incident doit être traité selon la procédure de réponse aux incidents." },
+          { text: "Escalader au RSSI et au N3 sécurité immédiatement tout en isolant le poste.", score: 3, quality: "good", feedback: "✅ Excellent ! Double action : isolation technique + escalade sécurité. C'est la bonne procédure de réponse à un incident majeur." }
+        ],
+        userReply: {
+          good: "OK j'ai débranché le câble. Le PC est toujours allumé. Qu'est-ce qui va m'arriver ?",
+          ok: "J'ai essayé mais les fichiers ne se suppriment pas !",
+          bad: "Payer ?? Mais c'est une grosse somme ! Et c'est l'argent de l'entreprise !"
+        }
+      },
+      {
+        situation: "Le poste est isolé. Que faites-vous maintenant ?",
+        options: [
+          { text: "Déclencher le Plan de Réponse aux Incidents (PRI), notifier le RSSI, DSI, et isoler tous les partages réseau accessibles depuis ce poste.", score: 3, quality: "good", feedback: "✅ EXCELLENT ! Activation du PRI, chaîne de communication activée, protection des ressources partagées. C'est la réponse professionnelle complète." },
+          { text: "Lancer un antivirus sur le poste infecté pour nettoyer.", score: 1, quality: "ok", feedback: "⚠️ Un antivirus peut aider, mais ce n'est pas la priorité. Le ransomware a déjà chiffré des fichiers. La priorité est le confinement et la préservation des preuves." },
+          { text: "Restaurer immédiatement les fichiers depuis la dernière sauvegarde.", score: 1, quality: "ok", feedback: "⚠️ La restauration viendra, mais APRÈS avoir confirmé que l'infection est contenue. Restaurer sur un système encore infecté est inutile." },
+          { text: "Interroger l'utilisateur sur ses actions récentes (emails ouverts, liens cliqués, USB branchée).", score: 2, quality: "ok", feedback: "⚠️ Bon réflexe forensique, mais l'urgence est d'abord le confinement. Faites les deux en parallèle si possible." }
+        ],
+        userReply: {
+          good: "Je comprends. Je ne touche à rien. Le RSSI est prévenu ?",
+          ok: "L'antivirus scan... mais il ne trouve rien d'anormal. C'est normal ?",
+          bad: "J'ai restauré mais les mêmes fichiers .enc sont toujours là !"
+        }
+      },
+      {
+        situation: "Le RSSI confirme un ransomware connu (LockBit variant). L'utilisateur demande quand il pourra récupérer ses fichiers. Que lui dites-vous ?",
+        options: [
+          { text: "Lui promettre que tout sera récupéré dans 24h.", score: 0, quality: "bad", feedback: "❌ Ne jamais faire de promesses que vous ne pouvez pas tenir. La communication en gestion de crise doit être honnête et prudente." },
+          { text: "Expliquer honnêtement la situation : enquête en cours, restauration depuis les sauvegardes possible selon leur état, délai incertain mais l'équipe est mobilisée.", score: 3, quality: "good", feedback: "✅ Communication de crise exemplaire ! Transparence, réassurance, information sur les étapes. L'utilisateur est informé sans fausse promesse." },
+          { text: "Lui dire que c'est de sa faute et qu'il aurait dû faire attention.", score: 0, quality: "bad", feedback: "❌ Culpabiliser l'utilisateur est contre-productif et non-professionnel. L'heure est à la résolution, pas aux reproches." },
+          { text: "Lui dire de ne plus s'inquiéter et de continuer à travailler sur un autre PC pendant l'investigation.", score: 2, quality: "ok", feedback: "⚠️ La continuité métier est importante, mais assurez-vous que l'autre PC n'a pas accès aux mêmes ressources réseau potentiellement compromises." }
+        ],
+        userReply: {
+          good: "Je comprends. Merci d'être honnête. Je reste disponible pour l'investigation.",
+          ok: "D'accord je vais travailler sur l'autre PC. Mais mes fichiers du mois dernier ?",
+          bad: "Ma faute ?! J'ai juste cliqué sur un email comme d'habitude !"
+        }
+      }
+    ]
+  },
+
+  mdp_oublie: {
+    title: "Mot de Passe Oublié",
+    level: "N1",
+    ticketNum: "INC-3102",
+    intro: "Bonjour, c'est Sophie Morin du service commercial. J'arrive au bureau ce matin et mon mot de passe Windows ne fonctionne plus. J'ai pourtant été en vacances 2 semaines, je n'ai rien changé ! J'ai des clients à appeler ce matin, c'est urgent !",
+    steps: [
+      {
+        situation: "Sophie ne peut pas se connecter. Comment gérez-vous sa demande ?",
+        options: [
+          { text: "Réinitialiser immédiatement le mot de passe et le donner à Sophie par téléphone.", score: 1, quality: "ok", feedback: "⚠️ Attention ! Donner un mot de passe par téléphone sans vérification d'identité est un risque de sécurité. Validez toujours l'identité de l'utilisateur d'abord." },
+          { text: "Vérifier l'identité de Sophie (matricule employé, date de naissance, ou manager), puis réinitialiser le MDP via l'AD et forcer le changement à la prochaine connexion.", score: 3, quality: "good", feedback: "✅ Parfait ! Vérification d'identité obligatoire avant toute action sur un compte. Réinitialisation via AD + changement forcé = bonne pratique de sécurité." },
+          { text: "Lui dire que le mot de passe expire après 90 jours et qu'il faut créer un ticket formel.", score: 1, quality: "ok", feedback: "⚠️ L'explication est valide, mais l'urgence métier de Sophie justifie un traitement rapide. Ne laissez pas un utilisateur bloqué pour des raisons de procédure quand vous pouvez aider." },
+          { text: "Lui demander si elle a essayé avec son ancien mot de passe ou si Verr. Maj est activé.", score: 2, quality: "ok", feedback: "⚠️ Bon réflexe de vérifier les causes simples, mais si le MDP a expiré après 2 semaines de vacances, les vérifications basiques ne suffiront pas." }
+        ],
+        userReply: {
+          good: "Mon matricule est SM2847. Merci de traiter ça rapidement !",
+          ok: "Un ticket ? Mais j'ai des clients ! Je ne peux pas attendre !",
+          bad: "J'ai essayé plein de fois. Le message dit 'mot de passe expiré'."
+        }
+      },
+      {
+        situation: "L'identité est vérifiée. Vous réinitialisez le MDP. Sophie demande si elle peut garder un mot de passe simple comme 'Sophie2024'. Comment répondez-vous ?",
+        options: [
+          { text: "Accepter pour ne pas la mettre en difficulté.", score: 0, quality: "bad", feedback: "❌ Jamais ! Accepter un mot de passe faible compromet la sécurité de l'entreprise. La politique de sécurité s'applique à tous." },
+          { text: "Expliquer la politique de mot de passe (complexité minimale, longueur, pas de prénom), lui proposer une méthode mémo-technique pour créer un MDP fort et mémorisable.", score: 3, quality: "good", feedback: "✅ Excellent ! Vous appliquez la politique de sécurité ET vous aidez l'utilisateur à y adhérer. La pédagogie fait partie du support de qualité." },
+          { text: "Lui dire simplement que c'est interdit par la politique.", score: 1, quality: "ok", feedback: "⚠️ Correct mais insuffisant. Expliquer POURQUOI et proposer une alternative aide l'utilisateur à comprendre et à adhérer à la politique." },
+          { text: "Lui suggérer d'écrire son mot de passe sur un post-it sous le clavier.", score: 0, quality: "bad", feedback: "❌ Écrire un mot de passe est une violation flagrante de la politique de sécurité. Ne jamais conseiller ça !" }
+        ],
+        userReply: {
+          good: "D'accord, je comprends. Je vais utiliser une phrase : 'J4imeL3sCh4ts!' ça va ?",
+          ok: "C'est interdit... mais comment je vais m'en souvenir alors ?",
+          bad: "Ça ne marchera jamais, je vais l'oublier encore !"
+        }
+      }
+    ]
+  },
+
+  vpn: {
+    title: "VPN Impossible",
+    level: "N2",
+    ticketNum: "INC-4567",
+    intro: "Bonjour, je suis Marc Dupont, commercial terrain. Je suis chez un client à Paris et je n'arrive pas à me connecter au VPN depuis ce matin. J'ai besoin d'accéder aux devis sur le serveur. Mon client attend ! Erreur 800 sur Cisco AnyConnect.",
+    steps: [
+      {
+        situation: "Marc a une erreur VPN 800. Par quoi commencez-vous le diagnostic ?",
+        options: [
+          { text: "Demander à Marc de désactiver son antivirus et pare-feu personnel.", score: 0, quality: "bad", feedback: "❌ Désactiver la sécurité est une mauvaise pratique. L'erreur 800 est liée à la connectivité et non à l'antivirus en général." },
+          { text: "Vérifier si le serveur VPN de l'entreprise est opérationnel, puis demander à Marc de tester avec son smartphone en partage de connexion.", score: 3, quality: "good", feedback: "✅ Excellent diagnostic ! Vérifier l'infra côté serveur d'abord, puis isoler le problème client/réseau. Le test 4G permet de confirmer si c'est lié au réseau du client." },
+          { text: "Demander à Marc de redémarrer son PC et de réessayer.", score: 1, quality: "ok", feedback: "⚠️ Le redémarrage peut parfois aider, mais ce n'est pas un diagnostic. L'erreur 800 a des causes précises qu'il faut investiguer." },
+          { text: "Escalader immédiatement au N3 réseau.", score: 1, quality: "ok", feedback: "⚠️ Trop tôt pour escalader. Épuisez les diagnostics N2 d'abord avant de solliciter le N3." }
+        ],
+        userReply: {
+          good: "Je teste avec mon 4G... Ça marche ! Donc c'est le Wi-Fi du client qui bloque ?",
+          ok: "Redémarrage fait... même erreur 800.",
+          bad: "L'antivirus est désactivé mais c'est pareil !"
+        }
+      },
+      {
+        situation: "Le VPN fonctionne en 4G mais pas sur le Wi-Fi client. Quelle est la cause probable et la solution immédiate pour Marc ?",
+        options: [
+          { text: "Confirmer que le firewall du client bloque les ports VPN (UDP 500/4500 ou TCP 443). Solution immédiate : utiliser le 4G pour son accès VPN, et informer le réseau qu'il faudra demander une ouverture de port si le site client est régulier.", score: 3, quality: "good", feedback: "✅ Diagnostic précis ! Identification de la cause réseau + solution de contournement immédiate + plan d'action long terme. C'est du N2 de qualité." },
+          { text: "Dire à Marc de demander au client d'ouvrir son réseau.", score: 1, quality: "ok", feedback: "⚠️ Demander à l'hôte d'ouvrir son réseau peut être délicat. Proposez d'abord une solution immédiate (4G) et gérez l'aspect réseau en parallèle." },
+          { text: "Réinstaller Cisco AnyConnect sur le PC de Marc.", score: 0, quality: "bad", feedback: "❌ La réinstallation ne résoudra pas un problème de réseau externe. Le diagnostic a clairement montré que le problème vient du réseau du client, pas du client VPN." },
+          { text: "Configurer un VPN SSL sur le port 443 en alternative pour bypasser les restrictions réseau.", score: 3, quality: "good", feedback: "✅ Solution technique avancée ! Le port 443 (HTTPS) est rarement bloqué. Cette configuration permettrait à Marc de travailler depuis n'importe où. Solution N2/N3." }
+        ],
+        userReply: {
+          good: "Parfait ! Je passe en 4G, je suis connecté. Merci pour la rapidité !",
+          ok: "D'accord je vais demander au client... c'est un peu gênant.",
+          bad: "J'ai réinstallé mais ça ne marche toujours pas !"
+        }
+      }
+    ]
+  },
+
+  imprimante: {
+    title: "Imprimante Réseau HS",
+    level: "N2",
+    ticketNum: "INC-6234",
+    intro: "Bonjour ! Ici Nadia, responsable comptabilité. Notre imprimante réseau ne fonctionne plus depuis ce matin. On est 8 personnes bloquées ! On doit imprimer des bons de commande urgent. L'imprimante clignote en orange.",
+    steps: [
+      {
+        situation: "Imprimante en panne pour 8 personnes. Première approche ?",
+        options: [
+          { text: "Créer un ticket avec priorité HAUTE (impact multiple utilisateurs), aller physiquement vérifier l'imprimante, et informer le service que vous intervenez.", score: 3, quality: "good", feedback: "✅ Excellent ! Priorisation correcte pour un incident multi-utilisateurs + action directe + communication proactive. C'est le bon réflexe." },
+          { text: "Demander à Nadia de réinstaller le pilote imprimante sur son poste.", score: 0, quality: "bad", feedback: "❌ Si 8 personnes sont touchées et l'imprimante clignote en orange, c'est clairement un problème hardware ou réseau, pas un pilote. Ne perdez pas de temps sur une fausse piste." },
+          { text: "Redémarrer le service spooler d'impression sur le serveur d'impression.", score: 2, quality: "ok", feedback: "⚠️ Bon réflexe technique, mais vérifiez d'abord l'état physique de l'imprimante (orange = problème hardware souvent)." },
+          { text: "Proposer à Nadia d'utiliser une autre imprimante dans un autre service en attendant.", score: 2, quality: "ok", feedback: "⚠️ La solution de contournement est intelligente pour la continuité métier, mais continuez le diagnostic en parallèle pour résoudre le problème." }
+        ],
+        userReply: {
+          good: "Merci ! On vous attend. L'imprimante est dans la salle du fond.",
+          ok: "On a bien une autre imprimante mais elle est au 3ème étage...",
+          bad: "On a tous réinstallé les pilotes mais c'est pareil !"
+        }
+      },
+      {
+        situation: "Vous êtes devant l'imprimante. Le voyant orange clignote. L'écran affiche 'Bourrage papier - Zone B'. Que faites-vous ?",
+        options: [
+          { text: "Ouvrir la Zone B selon les instructions affichées, retirer délicatement le papier coincé, refermer, et tester une impression.",score: 3, quality: "good", feedback: "✅ Action directe et appropriée ! Toujours suivre les instructions de l'imprimante pour un bourrage. Résolution rapide, 8 utilisateurs débloqués." },
+          { text: "Commander une nouvelle imprimante.", score: 0, quality: "bad", feedback: "❌ Complètement disproportionné pour un bourrage papier ! Analysez et résolvez le problème simple avant d'engager des coûts." },
+          { text: "Retirer le papier en tirant fort par le plateau d'alimentation.", score: 0, quality: "bad", feedback: "❌ Tirer fort peut abîmer les rouleaux ou déchirer du papier dans le mécanisme. Toujours suivre la procédure de débourrage indiquée." },
+          { text: "Documenter le problème dans la CMDB et escalader au prestataire de maintenance.", score: 1, quality: "ok", feedback: "⚠️ Un bourrage papier ne nécessite pas l'intervention d'un prestataire ! Résolvez ce qui est à votre portée. L'escalade est pour les pannes matérielles complexes." }
+        ],
+        userReply: {
+          good: "Ça imprime ! Oh merci ! C'était juste un bourrage. Désolée pour le dérangement !",
+          ok: "Vous avez tiré fort et maintenant il y a du papier déchiré à l'intérieur...",
+          bad: "Le prestataire ne peut venir que demain ! On est bloqués toute la journée ?"
+        }
+      }
+    ]
+  },
+
+  phishing: {
+    title: "Signalement Phishing",
+    level: "SEC",
+    ticketNum: "INC-7788",
+    intro: "Bonjour, j'ai reçu un email de notre 'direction financière' me demandant de valider mes identifiants Microsoft 365 via un lien. L'email semblait officiel... J'ai cliqué et rentré mes identifiants avant de me rendre compte que quelque chose clochait. Qu'est-ce que je dois faire ?",
+    steps: [
+      {
+        situation: "L'utilisateur a peut-être été compromis. Que faites-vous EN URGENCE ?",
+        options: [
+          { text: "Demander à l'utilisateur de changer son mot de passe Microsoft 365 immédiatement depuis un autre appareil sain.", score: 2, quality: "ok", feedback: "⚠️ Bonne réaction, mais attention : si l'attaquant a déjà accès, il peut être notifié du changement. Idéalement, bloquez d'abord le compte via l'AD avant le changement." },
+          { text: "Bloquer le compte via Azure AD / Active Directory immédiatement, alerter le RSSI, analyser les connexions récentes dans les logs Microsoft 365.", score: 3, quality: "good", feedback: "✅ RÉACTION PARFAITE ! Blocage compte = attaquant dehors. Analyse des logs = évaluation de l'impact. RSSI alerté = procédure de réponse activée." },
+          { text: "Rassurer l'utilisateur que ça arrive souvent et que ce n'est pas grave.", score: 0, quality: "bad", feedback: "❌ Un compte compromis peut avoir des conséquences graves (vol de données, BEC - Business Email Compromise). Ne minimisez jamais une potentielle compromission." },
+          { text: "Demander à l'utilisateur de transférer l'email suspect au support pour analyse.", score: 2, quality: "ok", feedback: "⚠️ L'analyse de l'email est utile pour bloquer l'expéditeur et sensibiliser, mais ce n'est pas la priorité. Le compte potentiellement compromis est l'urgence." }
+        ],
+        userReply: {
+          good: "Mon compte est bloqué ? Je ne peux plus travailler !",
+          ok: "J'ai changé le mot de passe. Je dois faire autre chose ?",
+          bad: "Ouf ! Donc il n'y a pas de risque ?"
+        }
+      },
+      {
+        situation: "Les logs montrent une connexion depuis une IP ukrainienne 20 minutes après la saisie des identifiants. L'attaquant a consulté la boîte mail. Comment gérez-vous l'impact et la communication ?",
+        options: [
+          { text: "Evaluer quels emails ont été lus/copiés, alerter les correspondants potentiellement touchés si des données sensibles ont été consultées, et rédiger un rapport d'incident.", score: 3, quality: "good", feedback: "✅ EXCELLENT ! Évaluation de l'impact, notification des tiers si nécessaire, documentation formelle. C'est la gestion complète d'un incident de sécurité." },
+          { text: "Effacer les logs pour éviter d'inquiéter la direction.", score: 0, quality: "bad", feedback: "❌ JAMAIS ! Effacer des preuves est potentiellement illégal (violation du RGPD sur la traçabilité) et contre l'intérêt de l'entreprise. Les logs sont des preuves juridiques." },
+          { text: "Contacter Interpol pour signaler l'IP ukrainienne.", score: 0, quality: "bad", feedback: "❌ Disproportionné et pas de votre ressort. Le RSSI et la direction décident des suites légales. Concentrez-vous sur la réponse technique." },
+          { text: "Réactiver le compte avec un nouveau mot de passe et activer l'MFA (authentification multifacteur) obligatoire.", score: 2, quality: "ok", feedback: "⚠️ L'activation de l'MFA est une excellente mesure préventive ! Mais avant de réactiver, assurez-vous que l'analyse d'impact est complète." }
+        ],
+        userReply: {
+          good: "Je comprends. J'ai discuté de dossiers clients par email cette semaine...",
+          ok: "L'MFA est activé. Mon compte est sécurisé maintenant ?",
+          bad: "Ils ont lu mes emails ?? C'est grave pour moi ?"
+        }
+      },
+      {
+        situation: "L'incident est sous contrôle. L'utilisateur est stressé et se sent coupable. Comment concluez-vous ?",
+        options: [
+          { text: "Lui dire que c'est entièrement de sa faute et qu'il devrait faire plus attention.", score: 0, quality: "bad", feedback: "❌ Culpabiliser un utilisateur victime de phishing est contre-productif. Cela décourage les signalements futurs (d'autres pourraient ne pas oser signaler)." },
+          { text: "Rassurer l'utilisateur (le phishing devient très sophistiqué), le remercier d'avoir signalé rapidement, l'inscrire à la prochaine session de sensibilisation cyber.", score: 3, quality: "good", feedback: "✅ PARFAIT ! Le signalement rapide a limité la casse. Valoriser le comportement de signalement est crucial pour la culture sécurité de l'entreprise. La sensibilisation est la meilleure prévention." },
+          { text: "Clôturer le ticket sans rien dire de plus.", score: 0, quality: "bad", feedback: "❌ L'utilisateur a vécu un incident stressant. La communication post-incident est importante pour sa sérénité et la clôture formelle." },
+          { text: "Proposer un audit complet de son PC pour vérifier si d'autres logiciels malveillants ont été installés.", score: 2, quality: "ok", feedback: "⚠️ L'audit est une bonne idée si l'utilisateur a exécuté quelque chose depuis l'email. Dans ce cas (saisie de credentials uniquement), c'est moins prioritaire mais pas inutile." }
+        ],
+        userReply: {
+          good: "Merci ! Je ne savais pas que les phishings étaient si réalistes. Je serai plus vigilant.",
+          ok: "Mon PC est sain au moins. Ouf !",
+          bad: "Je comprends... Je me sens vraiment stupide."
+        }
+      }
+    ]
+  }
+};
+
+let currentScenario = null;
+let currentStep = 0;
+let totalScore = 0;
+let maxScore = 0;
+let goodChoices = 0, okChoices = 0, badChoices = 0;
+
+function startScenario(key) {
+  currentScenario = SCENARIOS[key];
+  currentStep = 0;
+  totalScore = 0;
+  goodChoices = 0; okChoices = 0; badChoices = 0;
+  maxScore = currentScenario.steps.reduce((acc, s) => acc + 3, 0);
+
+  document.getElementById('scenario-screen').style.display = 'none';
+  document.getElementById('result-screen').style.display = 'none';
+  const sim = document.getElementById('simulator-screen');
+  sim.style.display = 'flex';
+
+  document.getElementById('ticket-num').textContent = currentScenario.ticketNum;
+  document.getElementById('scenario-title').textContent = currentScenario.title;
+  document.getElementById('scenario-level').textContent = currentScenario.level;
+  document.getElementById('step-val').textContent = `0/${currentScenario.steps.length}`;
+  document.getElementById('score-val').textContent = '0';
+
+  document.getElementById('chat-log').innerHTML = '';
+
+  // System msg
+  addMessage('system', '🎭 SYS', 'Simulation démarrée. Vous êtes le technicien helpdesk. Répondez professionnellement à chaque situation.');
+  
+  setTimeout(() => {
+    addMessage('user', 'USR', currentScenario.intro);
+    setTimeout(() => showStep(), 1000);
+  }, 500);
+}
+
+function showStep() {
+  const step = currentScenario.steps[currentStep];
+  document.getElementById('step-val').textContent = `${currentStep + 1}/${currentScenario.steps.length}`;
+
+  addMessage('system', '📋 SIT', step.situation);
+
+  const grid = document.getElementById('options-grid');
+  grid.innerHTML = '';
+  const labels = ['A', 'B', 'C', 'D'];
+  step.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="opt-key">${labels[i]}</span> ${opt.text}`;
+    btn.onclick = () => selectOption(i);
+    grid.appendChild(btn);
+  });
+}
+
+function selectOption(idx) {
+  const step = currentScenario.steps[currentStep];
+  const opt = step.options[idx];
+
+  // Disable all buttons
+  document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+
+  // Add tech message
+  addMessage('tech', 'TECH', opt.text);
+
+  // Feedback
+  setTimeout(() => {
+    const fclass = opt.quality;
+    const fd = document.createElement('div');
+    fd.className = `feedback-bubble ${fclass}`;
+    fd.textContent = opt.feedback;
+    const lastMsg = document.getElementById('chat-log').lastElementChild;
+    lastMsg.querySelector('.bubble').appendChild(fd);
+
+    // Score
+    totalScore += opt.score;
+    if (opt.quality === 'good') goodChoices++;
+    else if (opt.quality === 'ok') okChoices++;
+    else badChoices++;
+    document.getElementById('score-val').textContent = totalScore;
+
+    // User reply
+    setTimeout(() => {
+      const replyKey = opt.quality;
+      const reply = step.userReply[replyKey] || step.userReply.ok;
+      addMessage('user', 'USR', reply);
+
+      currentStep++;
+      setTimeout(() => {
+        if (currentStep < currentScenario.steps.length) {
+          showStep();
+        } else {
+          showResult();
+        }
+      }, 1200);
+    }, 800);
+  }, 400);
+}
+
+function addMessage(type, avatar, text) {
+  const log = document.getElementById('chat-log');
+
+  const msg = document.createElement('div');
+  msg.className = `msg ${type}`;
+
+  const av = document.createElement('div');
+  av.className = 'avatar';
+  av.textContent = avatar;
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = text;
+
+  const meta = document.createElement('div');
+  meta.className = 'msg-meta';
+  meta.textContent = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+  bubble.appendChild(meta);
+
+  msg.appendChild(av);
+  msg.appendChild(bubble);
+  log.appendChild(msg);
+  log.scrollTop = log.scrollHeight;
+}
+
+function showResult() {
+  document.getElementById('simulator-screen').style.display = 'none';
+  const rs = document.getElementById('result-screen');
+  rs.style.display = 'flex';
+
+  const pct = Math.round((totalScore / maxScore) * 100);
+  const disp = document.getElementById('final-score-display');
+  disp.textContent = `${pct}%`;
+
+  let grade, color, tips;
+  if (pct >= 85) {
+    grade = '🏆 Technicien Helpdesk Expert — Niveau ITIL Avancé';
+    color = 'var(--success)';
+    tips = 'Excellente maîtrise des procédures, de la communication et du diagnostic. Vous êtes prêt pour une certification ITIL Practitioner !';
+  } else if (pct >= 65) {
+    grade = '✅ Technicien Helpdesk Compétent — Bon niveau N2';
+    color = 'var(--accent)';
+    tips = 'Bonne base technique et procédurale. Travaillez sur la communication utilisateur et la gestion des priorités pour atteindre le niveau expert.';
+  } else if (pct >= 40) {
+    grade = '⚠️ Technicien en Formation — Niveau N1 à consolider';
+    color = 'var(--warn)';
+    tips = 'Les bases sont là mais certains réflexes clés manquent. Concentrez-vous sur : 1) Toujours vérifier l\'identité, 2) Diagnostiquer avant d\'agir, 3) Documenter systématiquement.';
+  } else {
+    grade = '❌ À améliorer — Révision des fondamentaux nécessaire';
+    color = 'var(--danger)';
+    tips = 'Retour aux fondamentaux ITIL recommandé. Focalisez-vous sur la méthode : Accueil → Qualification → Diagnostic → Résolution → Clôture.';
+  }
+
+  disp.style.color = color;
+  document.getElementById('final-grade').textContent = grade;
+
+  document.getElementById('result-breakdown').innerHTML = `
+    <div class="rb-item"><div class="v" style="color:var(--success)">${goodChoices}</div><div class="l">BONNES RÉPONSES</div></div>
+    <div class="rb-item"><div class="v" style="color:var(--warn)">${okChoices}</div><div class="l">PARTIELLES</div></div>
+    <div class="rb-item"><div class="v" style="color:var(--danger)">${badChoices}</div><div class="l">À REVOIR</div></div>
+    <div class="rb-item"><div class="v">${totalScore}/${maxScore}</div><div class="l">POINTS</div></div>
+  `;
+
+  document.getElementById('result-tips').textContent = tips;
+}
+
+function backToMenu() {
+  document.getElementById('simulator-screen').style.display = 'none';
+  document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('scenario-screen').style.display = 'flex';
+}
+</script>
+</body>
+</html>
