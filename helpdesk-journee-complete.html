@@ -1,0 +1,2341 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HelpDesk Academy — Simulation Journée Complète</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,400&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg: #0e0f14;
+  --surface: #14161e;
+  --surface2: #1a1d28;
+  --surface3: #22263a;
+  --border: #2a2f45;
+  --border2: #363d5a;
+  --text: #c8cfe8;
+  --text2: #7880a0;
+  --text3: #444d70;
+  --white: #eef0f8;
+  --green: #22c55e;
+  --green-dim: rgba(34,197,94,0.12);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.12);
+  --red: #ef4444;
+  --red-dim: rgba(239,68,68,0.12);
+  --blue: #3b82f6;
+  --blue-dim: rgba(59,130,246,0.12);
+  --purple: #a855f7;
+  --purple-dim: rgba(168,85,247,0.12);
+  --cyan: #06b6d4;
+  --cyan-dim: rgba(6,182,212,0.12);
+  --gold: #fbbf24;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --radius: 10px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ═══════════════════════════ SCREENS ═══════════════════════════ */
+.screen { display: none; width: 100%; height: 100%; }
+.screen.active { display: flex; flex-direction: column; }
+
+/* ═══════════════════════════ INTRO SCREEN ═══════════════════════════ */
+#s-intro {
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+}
+
+.intro-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.intro-glow {
+  position: absolute;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%);
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  pointer-events: none;
+}
+
+.intro-content {
+  position: relative;
+  z-index: 1;
+  max-width: 860px;
+  width: 100%;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.intro-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--blue);
+  letter-spacing: 0.5px;
+  width: fit-content;
+}
+.intro-badge .live-dot {
+  width: 6px; height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: blink 1.5s ease infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+.intro-title {
+  font-family: 'Fraunces', serif;
+  font-size: 3.6rem;
+  font-weight: 900;
+  line-height: 1.0;
+  color: var(--white);
+  letter-spacing: -1px;
+}
+.intro-title em { font-style: italic; color: var(--blue); font-weight: 300; }
+
+.intro-subtitle {
+  font-size: 1rem;
+  color: var(--text2);
+  line-height: 1.7;
+  max-width: 560px;
+}
+
+.intro-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.feat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+.feat-icon { font-size: 1.4rem; margin-bottom: 10px; }
+.feat-title { font-weight: 600; font-size: 0.85rem; color: var(--white); margin-bottom: 4px; }
+.feat-desc { font-size: 0.75rem; color: var(--text2); line-height: 1.5; }
+
+/* Role selector */
+.role-selector-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--text3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.roles-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.role-tile {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 14px;
+  cursor: pointer;
+  transition: all 0.18s;
+  position: relative;
+}
+.role-tile:hover { border-color: var(--role-c, var(--blue)); background: var(--surface2); }
+.role-tile.sel { border-color: var(--role-c, var(--blue)); background: color-mix(in srgb, var(--role-c, var(--blue)) 8%, var(--surface)); }
+.role-tile .rt-icon { font-size: 1.5rem; margin-bottom: 8px; }
+.role-tile .rt-name { font-weight: 600; font-size: 0.82rem; color: var(--white); margin-bottom: 4px; }
+.role-tile .rt-desc { font-size: 0.7rem; color: var(--text2); line-height: 1.4; }
+.role-tile .rt-badge {
+  display: inline-block;
+  margin-top: 8px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--role-c, var(--blue)) 20%, transparent);
+  color: var(--role-c, var(--blue));
+}
+
+.intro-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.btn-launch {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  padding: 13px 28px;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-launch:hover { background: #2563eb; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,0.3); }
+.btn-launch:disabled { opacity: 0.35; pointer-events: none; }
+
+.duration-selector {
+  display: flex;
+  gap: 8px;
+}
+.dur-btn {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  color: var(--text2);
+  padding: 8px 14px;
+  border-radius: 7px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.dur-btn:hover { border-color: var(--blue); color: var(--blue); }
+.dur-btn.sel { border-color: var(--blue); background: var(--blue-dim); color: var(--blue); }
+
+/* ═══════════════════════════ MAIN GAME SCREEN ═══════════════════════════ */
+#s-game {
+  flex-direction: row;
+  overflow: hidden;
+}
+
+/* Left panel — ticket queue */
+.panel-left {
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.panel-header .ph-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.queue-count {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  background: var(--red-dim);
+  color: var(--red);
+  padding: 2px 8px;
+  border-radius: 10px;
+  animation: countPulse 2s ease infinite;
+}
+@keyframes countPulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+#ticket-queue {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+#ticket-queue::-webkit-scrollbar { width: 3px; }
+#ticket-queue::-webkit-scrollbar-thumb { background: var(--border); }
+
+.ticket-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.ticket-item::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--prio-c, var(--border));
+}
+.ticket-item:hover { border-color: var(--border2); background: var(--surface3); }
+.ticket-item.active { border-color: var(--blue); background: var(--blue-dim); }
+.ticket-item.sla-warn { animation: slaPulse 1.5s ease infinite; }
+@keyframes slaPulse { 0%,100%{border-color:var(--amber)} 50%{border-color:transparent} }
+.ticket-item.sla-breach { animation: breachPulse 0.8s ease infinite; }
+@keyframes breachPulse { 0%,100%{border-color:var(--red)} 50%{border-color:transparent} }
+
+.ti-ref {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--text3);
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+}
+.ti-title {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--white);
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+.ti-meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.ti-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.58rem;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.tag-p1 { background: var(--red-dim); color: var(--red); }
+.tag-p2 { background: var(--amber-dim); color: var(--amber); }
+.tag-p3 { background: var(--blue-dim); color: var(--blue); }
+.tag-p4 { background: var(--surface3); color: var(--text3); }
+.ti-sla {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--text3);
+  margin-left: auto;
+}
+.ti-sla.warn { color: var(--amber); }
+.ti-sla.breach { color: var(--red); }
+
+/* Center — main work area */
+.panel-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Top bar */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.topbar-logo {
+  font-family: 'Fraunces', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.topbar-logo span { color: var(--blue); font-style: italic; }
+
+.topbar-clock {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--white);
+  background: var(--surface2);
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  letter-spacing: 2px;
+}
+
+.topbar-day {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text2);
+}
+
+.topbar-xp {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+.xp-bar-wrap {
+  width: 120px;
+  height: 6px;
+  background: var(--surface2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--blue), var(--purple));
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+.xp-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text2);
+  white-space: nowrap;
+}
+
+.role-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  color: var(--text);
+}
+.role-chip .dot { width: 6px; height: 6px; border-radius: 50%; }
+
+/* Stats strip */
+.stats-strip {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 20px;
+  display: flex;
+  gap: 24px;
+  flex-shrink: 0;
+}
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stat-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.stat-val {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--white);
+}
+.stat-val.green { color: var(--green); }
+.stat-val.amber { color: var(--amber); }
+.stat-val.red { color: var(--red); }
+
+/* Work area */
+#work-area {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Welcome / empty state */
+#empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--text3);
+}
+.empty-icon { font-size: 3rem; opacity: 0.4; }
+.empty-title { font-family: 'Fraunces', serif; font-size: 1.4rem; color: var(--text2); }
+.empty-sub { font-size: 0.8rem; color: var(--text3); text-align: center; max-width: 300px; line-height: 1.6; }
+
+/* Active ticket work */
+#ticket-work {
+  flex: 1;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ticket-work-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.twh-ref {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text2);
+  background: var(--surface2);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+.twh-title { font-size: 0.9rem; font-weight: 600; color: var(--white); }
+.twh-prio { margin-left: auto; }
+
+/* Chat */
+#chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+#chat-messages::-webkit-scrollbar { width: 4px; }
+#chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.msg {
+  display: flex;
+  gap: 10px;
+  animation: msgSlide 0.25s ease both;
+  max-width: 88%;
+}
+@keyframes msgSlide { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.msg.right { flex-direction: row-reverse; align-self: flex-end; }
+.msg.center { align-self: center; max-width: 100%; }
+
+.msg-av {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+}
+
+.msg-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.msg-who {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--text3);
+  padding: 0 2px;
+}
+.msg.right .msg-who { text-align: right; }
+
+.msg-bubble {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.b-user  { background: #1a1530; border: 1px solid #2d2050; color: #ccc0e8; }
+.b-tech  { background: #0f1f16; border: 1px solid #1a3824; color: #98d4b0; }
+.b-mgr   { background: #1a1020; border: 1px solid #302040; color: #c898e8; }
+.b-sys   {
+  background: var(--surface2);
+  border: 1px dashed var(--border);
+  color: var(--text3);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem;
+  border-radius: 6px;
+  padding: 8px 14px;
+  text-align: center;
+}
+.b-alert { background: var(--red-dim); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+.b-info  { background: var(--blue-dim); border: 1px solid rgba(59,130,246,0.3); color: #93c5fd; }
+
+.fb-block {
+  margin-top: 6px;
+  padding: 8px 12px;
+  border-radius: 7px;
+  font-size: 0.73rem;
+  line-height: 1.55;
+  font-weight: 500;
+}
+.fb-good { background: var(--green-dim); border: 1px solid rgba(34,197,94,0.25); color: #86efac; }
+.fb-ok   { background: var(--amber-dim); border: 1px solid rgba(245,158,11,0.25); color: #fcd34d; }
+.fb-bad  { background: var(--red-dim); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; }
+
+.pts-pop {
+  display: inline-block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 12px;
+  margin-top: 4px;
+  animation: ptsPop 0.4s cubic-bezier(.175,.885,.32,1.275) both;
+}
+@keyframes ptsPop { from{transform:scale(0.5) translateY(4px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
+.pts-good { background: var(--green-dim); color: var(--green); }
+.pts-ok   { background: var(--amber-dim); color: var(--amber); }
+.pts-bad  { background: var(--red-dim); color: var(--red); }
+
+/* Typing */
+.typing-dots { display: flex; gap: 4px; align-items: center; padding: 2px 0; }
+.tdot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--text3);
+  animation: tdAnim 1.2s ease infinite;
+}
+.tdot:nth-child(2){animation-delay:0.2s} .tdot:nth-child(3){animation-delay:0.4s}
+@keyframes tdAnim { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+
+/* Choice panel */
+#choice-panel {
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  padding: 14px 20px;
+  flex-shrink: 0;
+}
+.cp-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cp-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+#choices-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.choice-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  transition: all 0.14s;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.choice-btn:hover { border-color: var(--blue); background: var(--blue-dim); color: var(--white); }
+.choice-btn:disabled { opacity: 0.4; pointer-events: none; }
+.ckey {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  background: var(--surface3);
+  color: var(--text3);
+  padding: 2px 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Right panel */
+.panel-right {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rp-section {
+  border-bottom: 1px solid var(--border);
+  padding: 14px 14px;
+}
+.rp-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+/* Career / level */
+.career-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+.cc-level {
+  font-family: 'Fraunces', serif;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--white);
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.cc-level span { font-size: 0.7rem; font-weight: 400; color: var(--text3); font-family: 'DM Sans', sans-serif; }
+.cc-title { font-size: 0.78rem; color: var(--text2); margin: 4px 0 10px; font-weight: 500; }
+.xp-track {
+  height: 5px;
+  background: var(--surface3);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.xp-track-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--blue), var(--purple));
+  border-radius: 3px;
+  transition: width 0.6s cubic-bezier(.4,0,.2,1);
+}
+.xp-next { font-family: 'IBM Plex Mono', monospace; font-size: 0.58rem; color: var(--text3); }
+
+/* Skills */
+.skills-list { display: flex; flex-direction: column; gap: 8px; }
+.skill-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.skill-name { font-size: 0.72rem; color: var(--text2); flex: 1; }
+.skill-stars { font-size: 0.65rem; letter-spacing: 1px; }
+
+/* Events log */
+#events-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+#events-log::-webkit-scrollbar { width: 2px; }
+
+.event-entry {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.63rem;
+  line-height: 1.5;
+  color: var(--text3);
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--surface2);
+  padding: 4px 0;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.ev-time { flex-shrink: 0; }
+.ev-text { color: var(--text2); }
+.ev-text.good { color: var(--green); }
+.ev-text.bad { color: var(--red); }
+.ev-text.warn { color: var(--amber); }
+
+/* Notification toast */
+#toast {
+  position: fixed;
+  top: 70px;
+  right: 260px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 0.8rem;
+  color: var(--white);
+  max-width: 300px;
+  z-index: 1000;
+  transform: translateX(120%);
+  transition: transform 0.3s cubic-bezier(.175,.885,.32,1.275);
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+#toast.show { transform: translateX(0); }
+#toast .t-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+#toast .t-body { display: flex; flex-direction: column; gap: 2px; }
+#toast .t-title { font-weight: 600; font-size: 0.8rem; }
+#toast .t-msg { font-size: 0.72rem; color: var(--text2); line-height: 1.4; }
+
+/* Level up overlay */
+#levelup-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+#levelup-overlay.show { display: flex; }
+.levelup-card {
+  background: var(--surface);
+  border: 1px solid var(--blue);
+  border-radius: 20px;
+  padding: 48px 56px;
+  text-align: center;
+  max-width: 420px;
+  box-shadow: 0 0 60px rgba(59,130,246,0.2);
+  animation: luPop 0.5s cubic-bezier(.175,.885,.32,1.275) both;
+}
+@keyframes luPop { from{transform:scale(0.7);opacity:0} to{transform:scale(1);opacity:1} }
+.lu-emoji { font-size: 4rem; margin-bottom: 16px; }
+.lu-title {
+  font-family: 'Fraunces', serif;
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+.lu-subtitle { font-size: 0.85rem; color: var(--text2); margin-bottom: 6px; }
+.lu-new-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--blue);
+  margin-bottom: 24px;
+  letter-spacing: 0.5px;
+}
+.lu-unlock { font-size: 0.78rem; color: var(--text2); margin-bottom: 24px; line-height: 1.6; }
+.btn-continue {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 7px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-continue:hover { background: #2563eb; }
+
+/* End of day screen */
+#s-endday {
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+.endday-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 48px;
+  max-width: 700px;
+  width: 100%;
+  box-shadow: var(--shadow);
+}
+.ed-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+.ed-icon { font-size: 3rem; }
+.ed-title {
+  font-family: 'Fraunces', serif;
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--white);
+  line-height: 1.1;
+}
+.ed-subtitle { font-size: 0.85rem; color: var(--text2); margin-top: 4px; }
+
+.ed-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.ed-metric {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 12px;
+  text-align: center;
+}
+.ed-mv {
+  font-family: 'Fraunces', serif;
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.ed-ml {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ed-skills-section { margin-bottom: 24px; }
+.ed-skills-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+.ed-skill-rows { display: flex; flex-direction: column; gap: 8px; }
+.ed-skill-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ed-skill-name { font-size: 0.8rem; color: var(--text2); width: 160px; flex-shrink: 0; }
+.ed-skill-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--surface3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.ed-skill-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s ease 0.5s;
+}
+.ed-skill-val {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--text3);
+  width: 30px;
+  text-align: right;
+}
+
+.ed-analysis {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 24px;
+  font-size: 0.8rem;
+  line-height: 1.7;
+  color: var(--text2);
+}
+.ed-analysis strong { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 8px; }
+
+.ed-actions { display: flex; gap: 12px; }
+.btn-replay {
+  background: none;
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  padding: 10px 20px;
+  border-radius: 7px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-replay:hover { border-color: var(--border2); color: var(--white); }
+
+/* Misc */
+.sla-timer {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--surface2);
+  color: var(--text3);
+}
+.sla-timer.warn { background: var(--amber-dim); color: var(--amber); }
+.sla-timer.breach { background: var(--red-dim); color: var(--red); }
+
+.interrupt-banner {
+  background: linear-gradient(90deg, var(--red-dim), transparent);
+  border-left: 3px solid var(--red);
+  padding: 10px 16px;
+  font-size: 0.78rem;
+  color: #fca5a5;
+  animation: bannerIn 0.3s ease;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+@keyframes bannerIn { from{transform:translateY(-100%);opacity:0} to{transform:translateY(0);opacity:1} }
+.interrupt-banner:hover { background: linear-gradient(90deg, rgba(239,68,68,0.2), transparent); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ INTRO ═══════════════════════════ -->
+<div id="s-intro" class="screen active">
+  <div class="intro-grid"></div>
+  <div class="intro-glow"></div>
+  <div class="intro-content">
+    <div>
+      <div class="intro-badge"><span class="live-dot"></span> Formation immersive — ITIL v4</div>
+      <div style="height:16px"></div>
+      <h1 class="intro-title">Simulation<br><em>Journée</em><br>Helpdesk</h1>
+      <div style="height:12px"></div>
+      <p class="intro-subtitle">Vivez une vraie journée de travail au helpdesk — tickets en temps réel, pression SLA, interruptions, escalades, et progression de carrière. De 8h à 18h.</p>
+    </div>
+
+    <div class="intro-features">
+      <div class="feat-card">
+        <div class="feat-icon">⏱️</div>
+        <div class="feat-title">Horloge temps réel</div>
+        <div class="feat-desc">La journée s'écoule avec des tickets qui arrivent selon l'heure — rush matinal, calme d'après-midi, incidents de fin de journée.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📋</div>
+        <div class="feat-title">File de tickets vivante</div>
+        <div class="feat-desc">30+ tickets générés dynamiquement, SLA qui défilent, P1 qui interrompent. Gérez vos priorités comme en production.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🎓</div>
+        <div class="feat-title">Progression de carrière</div>
+        <div class="feat-desc">XP, niveaux, compétences. Montez en grade de Stagiaire à Expert DSI selon vos performances sur la journée.</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="role-selector-title">Choisissez votre rôle</div>
+      <div class="roles-row">
+        <div class="role-tile" style="--role-c:#f59e0b" data-role="user" onclick="pickRole(this)">
+          <div class="rt-icon">👤</div>
+          <div class="rt-name">Utilisateur</div>
+          <div class="rt-desc">Signalez, collaborez, escaladez si besoin</div>
+          <span class="rt-badge">Mode Facile</span>
+        </div>
+        <div class="role-tile" style="--role-c:#22c55e" data-role="n1" onclick="pickRole(this)">
+          <div class="rt-icon">🎧</div>
+          <div class="rt-name">Technicien N1</div>
+          <div class="rt-desc">Accueil, qualification, résolution standard</div>
+          <span class="rt-badge">Mode Normal</span>
+        </div>
+        <div class="role-tile" style="--role-c:#3b82f6" data-role="n2" onclick="pickRole(this)">
+          <div class="rt-icon">🔧</div>
+          <div class="rt-name">Technicien N2</div>
+          <div class="rt-desc">Diagnostics avancés, root cause, CMDB</div>
+          <span class="rt-badge">Mode Difficile</span>
+        </div>
+        <div class="role-tile" style="--role-c:#a855f7" data-role="mgr" onclick="pickRole(this)">
+          <div class="rt-icon">📊</div>
+          <div class="rt-name">Manager</div>
+          <div class="rt-desc">SLA, équipe, communication de crise, KPIs</div>
+          <span class="rt-badge">Mode Expert</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="intro-actions">
+      <button class="btn-launch" id="btn-launch" disabled onclick="launchGame()">
+        ▶ Démarrer la journée
+      </button>
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:0.6rem;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Durée de session</div>
+        <div class="duration-selector">
+          <button class="dur-btn sel" data-dur="30" onclick="pickDur(this)">30 min</button>
+          <button class="dur-btn" data-dur="60" onclick="pickDur(this)">1 heure</button>
+          <button class="dur-btn" data-dur="120" onclick="pickDur(this)">2 heures</button>
+          <button class="dur-btn" data-dur="480" onclick="pickDur(this)">Journée</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ MAIN GAME ═══════════════════════════ -->
+<div id="s-game" class="screen">
+  <!-- LEFT: ticket queue -->
+  <div class="panel-left">
+    <div class="panel-header">
+      <span class="ph-title">File d'attente</span>
+      <span class="queue-count" id="queue-count">0</span>
+    </div>
+    <div id="ticket-queue"></div>
+  </div>
+
+  <!-- CENTER: work area -->
+  <div class="panel-center">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-logo">Help<span>Desk</span></div>
+      <div class="topbar-clock" id="clock">08:00</div>
+      <div class="topbar-day" id="day-label">Lundi — Semaine 1</div>
+      <div class="topbar-xp">
+        <div class="xp-label" id="xp-label">Niveau 1</div>
+        <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xp-bar" style="width:0%"></div></div>
+        <div class="xp-label" id="xp-pts">0 XP</div>
+      </div>
+      <div class="role-chip">
+        <div class="dot" id="role-dot" style="background:var(--green)"></div>
+        <span id="role-chip-name">—</span>
+      </div>
+    </div>
+
+    <!-- Stats strip -->
+    <div class="stats-strip">
+      <div class="stat-item">
+        <div class="stat-label">Résolus</div>
+        <div class="stat-val green" id="s-resolved">0</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">En attente</div>
+        <div class="stat-val amber" id="s-pending">0</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">SLA OK</div>
+        <div class="stat-val green" id="s-sla-ok">100%</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">CSAT</div>
+        <div class="stat-val" id="s-csat">★★★★☆</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Score</div>
+        <div class="stat-val" id="s-score">0 pts</div>
+      </div>
+      <div class="stat-item" style="margin-left:auto">
+        <div class="stat-label">Ticket actif</div>
+        <div class="stat-val" id="s-active-ticket">—</div>
+      </div>
+    </div>
+
+    <!-- Work area -->
+    <div id="work-area">
+      <div id="empty-state">
+        <div class="empty-icon">📭</div>
+        <div class="empty-title">Aucun ticket actif</div>
+        <div class="empty-sub">Sélectionnez un ticket dans la file d'attente pour commencer à travailler.</div>
+      </div>
+      <div id="ticket-work">
+        <div class="ticket-work-header">
+          <span class="twh-ref" id="tw-ref">—</span>
+          <span class="twh-title" id="tw-title">—</span>
+          <span class="twh-prio" id="tw-prio"></span>
+          <span class="sla-timer" id="tw-sla">SLA: —</span>
+        </div>
+        <div id="chat-messages"></div>
+        <div id="choice-panel">
+          <div class="cp-label">Votre réponse</div>
+          <div id="choices-grid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: stats & log -->
+  <div class="panel-right">
+    <div class="rp-section">
+      <div class="rp-title">Progression</div>
+      <div class="career-card">
+        <div class="cc-level" id="cc-level">1 <span>/ 10</span></div>
+        <div class="cc-title" id="cc-title">Stagiaire Helpdesk</div>
+        <div class="xp-track"><div class="xp-track-fill" id="cc-xp-bar" style="width:0%"></div></div>
+        <div class="xp-next" id="cc-xp-next">0 / 100 XP</div>
+      </div>
+    </div>
+
+    <div class="rp-section">
+      <div class="rp-title">Compétences</div>
+      <div class="skills-list" id="skills-list"></div>
+    </div>
+
+    <div class="panel-header" style="flex-shrink:0">
+      <span class="ph-title">Journal d'activité</span>
+    </div>
+    <div id="events-log"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ END OF DAY ═══════════════════════════ -->
+<div id="s-endday" class="screen">
+  <div class="endday-card">
+    <div class="ed-header">
+      <div class="ed-icon" id="ed-icon">🏁</div>
+      <div>
+        <div class="ed-title" id="ed-title">Fin de journée</div>
+        <div class="ed-subtitle" id="ed-subtitle">—</div>
+      </div>
+    </div>
+    <div class="ed-metrics" id="ed-metrics"></div>
+    <div class="ed-skills-section">
+      <div class="ed-skills-title">Évolution des compétences</div>
+      <div class="ed-skill-rows" id="ed-skill-rows"></div>
+    </div>
+    <div class="ed-analysis"><strong>Analyse formateur</strong><span id="ed-analysis-text"></span></div>
+    <div class="ed-actions">
+      <button class="btn-replay" onclick="resetGame()">↩ Recommencer</button>
+      <button class="btn-launch" onclick="resetGame()">🎓 Nouvelle session</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast">
+  <div class="t-icon" id="t-icon">🔔</div>
+  <div class="t-body">
+    <div class="t-title" id="t-title">Notification</div>
+    <div class="t-msg" id="t-msg">—</div>
+  </div>
+</div>
+
+<!-- Level up overlay -->
+<div id="levelup-overlay">
+  <div class="levelup-card">
+    <div class="lu-emoji" id="lu-emoji">🎉</div>
+    <div class="lu-title" id="lu-title">Niveau 2 !</div>
+    <div class="lu-subtitle">Vous progressez</div>
+    <div class="lu-new-title" id="lu-new-title">—</div>
+    <div class="lu-unlock" id="lu-unlock">—</div>
+    <button class="btn-continue" onclick="closeLevelUp()">Continuer →</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════ CONFIG ═══════════════════════════
+const ROLE_DEFS = {
+  user: { name:'Utilisateur', icon:'👤', color:'#f59e0b', dot:'#f59e0b', bubble:'b-user' },
+  n1:   { name:'Technicien N1', icon:'🎧', color:'#22c55e', dot:'#22c55e', bubble:'b-tech' },
+  n2:   { name:'Technicien N2', icon:'🔧', color:'#3b82f6', dot:'#3b82f6', bubble:'b-tech' },
+  mgr:  { name:'Manager IT', icon:'📊', color:'#a855f7', dot:'#a855f7', bubble:'b-mgr' }
+};
+
+const LEVELS = [
+  { lvl:1, title:'Stagiaire Helpdesk', xp:0, emoji:'🌱', unlock:'Tickets N1 basiques' },
+  { lvl:2, title:'Support Junior', xp:100, emoji:'📞', unlock:'Accès aux outils de diagnostic' },
+  { lvl:3, title:'Technicien N1', xp:250, emoji:'🎧', unlock:'Tickets N2 simples débloqués' },
+  { lvl:4, title:'Technicien Confirmé', xp:450, emoji:'🔧', unlock:'Prise en main à distance' },
+  { lvl:5, title:'Expert N2', xp:700, emoji:'⚡', unlock:'Incidents majeurs et P1' },
+  { lvl:6, title:'Référent Technique', xp:1000, emoji:'🏗️', unlock:'Gestion de crise' },
+  { lvl:7, title:'Lead Helpdesk', xp:1400, emoji:'🦅', unlock:'Tableau de bord manager' },
+  { lvl:8, title:'Responsable Support', xp:1900, emoji:'📊', unlock:'KPIs et SLA avancés' },
+  { lvl:9, title:'DSI Adjoint', xp:2500, emoji:'🎯', unlock:'Scénarios de direction' },
+  { lvl:10, title:'Expert DSI', xp:3200, emoji:'🏆', unlock:'Maîtrise complète' }
+];
+
+const SKILLS_DEF = [
+  { key:'qualification', name:'Qualification', color:'#22c55e' },
+  { key:'diagnostic', name:'Diagnostic', color:'#3b82f6' },
+  { key:'communication', name:'Communication', color:'#f59e0b' },
+  { key:'procedure', name:'Procédures ITIL', color:'#a855f7' },
+  { key:'securite', name:'Sécurité', color:'#ef4444' }
+];
+
+// ═══════════════════════════ TICKET LIBRARY ═══════════════════════════
+// Each ticket: id, ref, title, priority (1-4), sla(minutes sim), category, steps per role
+const TICKET_LIBRARY = [
+
+  // ─── N1 SIMPLE ───
+  {
+    id:'mdp01', ref:'INC-3001', title:'Mot de passe oublié', prio:3, sla:30, cat:'Accès',
+    hour: 8, // spawns at 8h
+    roles: {
+      n1: {
+        npc_icon:'👤', npc_name:'Léa — RH',
+        steps: [
+          {
+            context: 'Léa appelle : elle ne peut plus se connecter, mot de passe oublié après le week-end.',
+            npc_text: 'Bonjour, c\'est Léa du service RH. Je n\'arrive plus à me connecter ce matin, j\'ai dû oublier mon mot de passe après les vacances...',
+            choices: [
+              { t:'Bonjour Léa ! Je crée un ticket. Pouvez-vous me confirmer votre matricule et votre service pour vérifier votre identité ?', s:3, q:'good', fb:'✅ Parfait — ticket créé + vérification d\'identité AVANT toute action. Procédure de sécurité respectée.' },
+              { t:'Pas de problème, je réinitialise votre mot de passe tout de suite.', s:0, q:'bad', fb:'❌ Réinitialiser sans vérifier l\'identité est une faille de sécurité critique. N\'importe qui pourrait appeler en se faisant passer pour Léa.' },
+              { t:'Vous avez bien appuyé sur Ctrl+Alt+Suppr ? Vous voyez bien le champ mot de passe ?', s:0, q:'bad', fb:'❌ La question est hors sujet — le problème est clairement un mot de passe oublié. Qualifiez et agissez.' },
+              { t:'Je crée le ticket et vérifie votre compte dans l\'Active Directory.', s:2, q:'ok', fb:'⚠️ Bien, mais vous n\'avez pas demandé à vérifier l\'identité avant d\'agir sur le compte.' }
+            ],
+            reply: { good:'Bien sûr — matricule LM4521, service RH, bureau 214.', ok:'D\'accord. Mon matricule c\'est LM4521.', bad:'Oui oui, j\'ai fait ça. Mon mot de passe ne marche vraiment plus.' }
+          },
+          {
+            context: 'Identité vérifiée. Vous ouvrez l\'AD. Le compte est verrouillé (5 tentatives échouées). Quelle action ?',
+            npc_text: null,
+            choices: [
+              { t:'Déverrouiller le compte, forcer un changement de mot de passe à la prochaine connexion, et informer Léa du nouveau mot de passe temporaire par téléphone uniquement.', s:3, q:'good', fb:'✅ Action correcte et sécurisée — déverrouillage + forçage changement MDP + communication sécurisée (téléphone, jamais email).' },
+              { t:'Réinitialiser le MDP à "Password123" et l\'envoyer par email à Léa.', s:0, q:'bad', fb:'❌ Double erreur : MDP faible + envoi par email (non sécurisé). Le MDP doit être fort et communiqué verbalement.' },
+              { t:'Déverrouiller le compte et demander à Léa de créer un nouveau MDP conforme à la politique (12 car, majuscule, chiffre, symbole).', s:3, q:'good', fb:'✅ Excellent ! Vous respectez la politique de sécurité et responsabilisez l\'utilisateur pour son nouveau mot de passe.' },
+              { t:'Escalader au N2 — les problèmes d\'AD ne sont pas de mon ressort.', s:0, q:'bad', fb:'❌ La gestion des comptes AD de base est clairement du niveau N1. L\'escalade au N2 serait disproportionnée.' }
+            ],
+            reply: { good:'Super, je vois le champ de changement de MDP. C\'est bon, ça marche ! Merci !', ok:'Ok, je tape mon nouveau mot de passe... ça marche ! Merci.', bad:'Mon compte est toujours bloqué...' }
+          }
+        ],
+        skills: { qualification:2, procedure:2, securite:1 }
+      },
+      n2: {
+        npc_icon:'🎧', npc_name:'Alex — N1',
+        steps: [
+          {
+            context: 'Le N1 vous escalade : le compte de Léa se reverrouille automatiquement toutes les 15 minutes malgré 3 déverrouillages.',
+            npc_text: 'INC-3001 escaladé. Le compte LM4521 (Léa Martin) se reverrouille en boucle. J\'ai déverrouillé 3 fois, ça revient 15min après. Quelque chose essaie de s\'authentifier en continu.',
+            choices: [
+              { t:'Analyser les logs de sécurité AD pour identifier la source des tentatives d\'auth (event 4625). Chercher quel appareil ou service génère ces tentatives.', s:3, q:'good', fb:'✅ Diagnostic N2 exemplaire ! Event 4625 = échec d\'auth. Les logs vont révéler la source (téléphone, service, poste avec cache).' },
+              { t:'Augmenter le seuil de verrouillage de 5 à 20 tentatives pour Léa.', s:0, q:'bad', fb:'❌ Augmenter le seuil masque le problème et crée une faille de sécurité. Il faut trouver et éliminer la cause du verrouillage.' },
+              { t:'Demander à Léa si elle a un smartphone professionnel avec son compte Exchange configuré.', s:2, q:'ok', fb:'⚠️ Bonne piste ! Un téléphone avec un ancien MDP en cache est une cause fréquente. Combinez ça avec l\'analyse des logs pour un diagnostic complet.' },
+              { t:'Désactiver temporairement le compte le temps d\'investiguer.', s:1, q:'ok', fb:'⚠️ Mesure de précaution possible, mais Léa ne peut plus travailler. Investiguer rapidement est la priorité.' }
+            ],
+            reply: { good:'[Logs] Event 4625 depuis IPHONE-LEA-PRO — 214 tentatives Exchange ActiveSync avec l\'ancien MDP.', ok:'Léa confirme — elle a un iPhone professionnel avec son email configuré.', bad:'Seuil modifié. Le compte reste ouvert maintenant mais les logs montrent toujours des tentatives...' }
+          }
+        ],
+        skills: { diagnostic:3, securite:2 }
+      },
+      mgr: {
+        npc_icon:'📊', npc_name:'Tableau de bord',
+        steps: [
+          {
+            context: 'C\'est le 3ème cas de verrouillage de compte cette semaine. Le N1 vous demande comment éviter cette situation récurrente.',
+            npc_text: '3 cas de verrouillage identiques cette semaine — tous des retours de congés/week-ends. L\'équipe passe du temps dessus. Comment on réduit ça ?',
+            choices: [
+              { t:'Déployer un portail SSPR (Self-Service Password Reset) pour permettre aux utilisateurs de réinitialiser leur MDP sans appeler le support.', s:3, q:'good', fb:'✅ Solution stratégique ! Le SSPR réduit les tickets de 40-60% selon les études ITIL. ROI immédiat et utilisateurs autonomes.' },
+              { t:'Former les utilisateurs à noter leur MDP dans un carnet personnel.', s:0, q:'bad', fb:'❌ Écrire un MDP est une violation de la politique de sécurité. Ne jamais recommander ça.' },
+              { t:'Analyser les données : quels services sont les plus touchés, à quelle période (retours de vacances), et proposer une campagne de sensibilisation ciblée + SSPR.', s:3, q:'good', fb:'✅ Approche manager complète ! Données + cause + solution court terme (sensibilisation) + long terme (SSPR). C\'est de l\'amélioration continue ITIL.' },
+              { t:'Laisser le N1 gérer — ce sont des tickets simples.', s:0, q:'bad', fb:'❌ Le rôle du manager est précisément d\'identifier les tendances et de prendre des décisions pour améliorer le service, pas de subir les mêmes tickets indéfiniment.' }
+            ],
+            reply: { good:'Excellent. Je valide le projet SSPR. Préparez une note de cadrage pour la direction.', ok:'Bonne idée pour la sensibilisation. Et le SSPR, c\'est quoi le délai de déploiement ?', bad:'D\'accord... mais ça fait quand même beaucoup de tickets identiques...' }
+          }
+        ],
+        skills: { procedure:3, communication:2 }
+      },
+      user: {
+        npc_icon:'🎧', npc_name:'Support Helpdesk',
+        steps: [
+          {
+            context: 'Vous ne pouvez pas vous connecter ce matin. Comment signalez-vous le problème au helpdesk ?',
+            npc_text: null,
+            choices: [
+              { t:'Appeler le helpdesk en précisant : mon nom, service, matricule, et que je ne peux plus me connecter depuis ce matin — message "compte verrouillé".', s:3, q:'good', fb:'✅ Signalement complet et précis ! Ces informations permettent au technicien d\'ouvrir un ticket complet et d\'agir immédiatement.' },
+              { t:'Envoyer un email "ça marche pas" et attendre.', s:0, q:'bad', fb:'❌ Trop vague et vous n\'avez probablement plus accès à votre email non plus si votre compte Windows est bloqué !' },
+              { t:'Demander à un collègue de prêter son compte le temps que ça soit réparé.', s:0, q:'bad', fb:'❌ Partager des comptes est une violation de la charte informatique. Appelez le helpdesk — ils traitent ça rapidement.' },
+              { t:'Appeler le helpdesk depuis mon téléphone portable et décrire : nom Léa Martin, RH, matricule LM4521, compte bloqué ce matin, besoin urgent.', s:3, q:'good', fb:'✅ Excellent ! Vous utilisez votre mobile (bonne idée si le PC est inaccessible) et donnez toutes les infos nécessaires.' }
+            ],
+            reply: { good:'Merci Léa. Je crée le ticket et vérifie votre compte. Confirmez-moi votre date de naissance pour vérification.', ok:'D\'accord, pouvez-vous me donner plus de détails ? Votre matricule ?', bad:'Je vais voir ce que je peux faire...' }
+          }
+        ],
+        skills: { communication:2, qualification:1 }
+      }
+    }
+  },
+
+  {
+    id:'pc_lent01', ref:'INC-3012', title:'PC très lent au démarrage', prio:3, sla:60, cat:'Postes',
+    hour: 9,
+    roles: {
+      n1: {
+        npc_icon:'👤', npc_name:'Thomas — Commerce',
+        steps: [
+          {
+            context: 'Thomas signale que son PC met 12 minutes à démarrer depuis lundi. Il ne peut pas travailler le matin.',
+            npc_text: 'Bonjour, mon PC est vraiment très lent depuis lundi. Il met 12 minutes à démarrer ! Ce matin j\'ai attendu jusqu\'à 9h pour pouvoir commencer. C\'est insupportable.',
+            choices: [
+              { t:'Bonjour Thomas ! Je crée un ticket. Depuis quand exactement ? Des mises à jour ou installations récentes ? Et c\'est lent seulement au démarrage ou aussi en utilisation ?', s:3, q:'good', fb:'✅ Qualification ITIL complète — ticket + 3 questions clés (chronologie, changements récents, périmètre du problème).' },
+              { t:'Essayez de redémarrer et appelez-nous si ça ne va pas mieux.', s:0, q:'bad', fb:'❌ Le redémarrage ne résoudra pas un problème structurel. Qualifiez correctement avant de proposer une action.' },
+              { t:'C\'est sûrement un virus. Je vous envoie notre antivirus par email.', s:0, q:'bad', fb:'❌ Diagnostiquer sans investigation est une erreur. Et envoyer des logiciels par email n\'est pas une procédure standard.' },
+              { t:'Créer le ticket, demander si des mises à jour ont été faites récemment par le service IT, et programmer une prise en main à distance.', s:2, q:'ok', fb:'⚠️ Bonne approche, mais posez aussi des questions sur les symptômes (seulement au démarrage ? toute la journée ?).' }
+            ],
+            reply: { good:'Depuis lundi. Le service IT a fait des MAJ vendredi soir. C\'est surtout le démarrage — après il est normal.', ok:'Des MAJ vendredi soir par le service IT. Je ne sais pas quoi d\'autre.', bad:'Vous pensez vraiment à un virus ? Je suis inquiet...' }
+          },
+          {
+            context: 'Des MAJ ont été faites vendredi. Vous prenez la main à distance. Vous voyez 3 nouvelles mises à jour KB et 8 applications au démarrage. Que faites-vous ?',
+            npc_text: null,
+            choices: [
+              { t:'Vérifier le Gestionnaire des tâches > Démarrage, désactiver les apps non-essentielles, et vérifier le journal Windows Update pour une KB problématique connue.', s:3, q:'good', fb:'✅ Diagnostic N1 avancé et méthodique ! Vous travaillez sur les deux causes probables en parallèle.' },
+              { t:'Désinstaller toutes les mises à jour du week-end pour revenir à l\'état d\'avant.', s:0, q:'bad', fb:'❌ Désinstaller toutes les MAJ sans identifier la problématique est risqué (MAJ de sécurité critiques) et disproportionné.' },
+              { t:'Reformater le PC — c\'est plus rapide que de chercher.', s:0, q:'bad', fb:'❌ Le reformatage est la solution de dernier recours, pas la première option. Cherchez la cause d\'abord.' },
+              { t:'Désactiver les applications non-essentielles au démarrage et redémarrer pour mesurer l\'amélioration.', s:2, q:'ok', fb:'⚠️ Bon réflexe pour les apps de démarrage. Vérifiez aussi les MAJ récentes en parallèle pour ne pas manquer la cause racine.' }
+            ],
+            reply: { good:'[Résultat] Démarrage en 58 secondes après optimisation. KB2847963 identifiée comme problématique. Thomas confirme : "C\'est parfait maintenant !"', ok:'[Résultat] Démarrage en 4 minutes. Amélioration partielle — il reste une MAJ qui pose problème.', bad:'[Erreur] Reformatage lancé... Thomas demande où sont ses fichiers de travail...' }
+          }
+        ],
+        skills: { diagnostic:2, qualification:2, procedure:1 }
+      },
+      n2: {
+        npc_icon:'🎧', npc_name:'N1 — Support',
+        steps: [
+          {
+            context: 'Le N1 vous escalade — optimisation faite mais le PC de Thomas redémarre encore lentement après 48h. La KB identifiée a été réinstallée automatiquement.',
+            npc_text: 'INC-3012 re-escaladé. On a optimisé le démarrage mais la KB problématique se réinstalle automatiquement via WSUS. Thomas est de nouveau lent.',
+            choices: [
+              { t:'Identifier la KB problématique, vérifier si elle est dans le catalogue WSUS, bloquer son déploiement sur ce poste, et documenter pour alerter l\'équipe infra.', s:3, q:'good', fb:'✅ Solution N2 complète ! Blocage WSUS ciblé + communication infra pour éviter le même problème sur tous les postes.' },
+              { t:'Désactiver les mises à jour automatiques sur le poste de Thomas.', s:0, q:'bad', fb:'❌ Désactiver les MAJ crée une faille de sécurité. La solution est de gérer sélectivement via WSUS, pas de tout désactiver.' },
+              { t:'Identifier la KB, vérifier les problèmes connus sur le catalogue Microsoft, créer une exclusion WSUS pour cette KB sur le groupe de postes Windows 10 Pro, et documenter en Knowledge Base.', s:3, q:'good', fb:'✅ Parfait ! Vous gérez le problème + prévenez sa réapparition + contribuez à la base de connaissances de l\'équipe.' },
+              { t:'Réinstaller Windows sur le poste de Thomas.', s:0, q:'bad', fb:'❌ Disproportionné pour un problème de MAJ. Gérez ça via WSUS — c\'est exactement pour ça que cet outil existe.' }
+            ],
+            reply: { good:'KB bloquée sur WSUS. Démarrage en 52 sec confirmé. Documentation KB ajoutée. 4 autres postes avaient le même problème — résolu en masse.', ok:'OK pour le blocage. Mais d\'autres postes ont le même problème...', bad:'Réinstallation en cours — 3 heures de downtime pour Thomas...' }
+          }
+        ],
+        skills: { diagnostic:3, procedure:2 }
+      },
+      mgr: {
+        npc_icon:'📊', npc_name:'Équipe IT',
+        steps: [
+          {
+            context: 'Vous découvrez que 15 postes ont été ralentis par la même KB problématique. Le N1 a traité individuellement. Comment gérez-vous ?',
+            npc_text: 'On a 15 postes affectés par la même KB. Le N1 en traite un par un. Ça va prendre la journée. Et 3 managers se plaignent auprès de la direction.',
+            choices: [
+              { t:'Centraliser : bloquer la KB via WSUS en masse sur tous les postes affectés, communiquer proactivement aux utilisateurs, et informer la direction du plan d\'action.', s:3, q:'good', fb:'✅ Gestion d\'incident en masse exemplaire ! Action centralisée + communication proactive (ne pas attendre les plaintes) + information direction.' },
+              { t:'Laisser le N1 gérer poste par poste — ils ont bien commencé.', s:0, q:'bad', fb:'❌ 15 tickets identiques = incident en masse à traiter globalement, pas individuellement. C\'est votre rôle de décider ça.' },
+              { t:'Envoyer un email à tous les utilisateurs affectés pour s\'excuser et promettre une résolution dans la journée.', s:1, q:'ok', fb:'⚠️ La communication est bien, mais agissez d\'abord (bloquer la KB) puis communiquez. Et ne promettez que ce que vous contrôlez.' },
+              { t:'Bloquer la KB en masse + communication utilisateurs + rapport d\'incident + réunion post-mortem WSUS pour éviter ça à l\'avenir.', s:3, q:'good', fb:'✅ Réponse complète niveau manager senior ! Action + com + rapport + amélioration = cercle vertueux ITIL.' }
+            ],
+            reply: { good:'Direction informée. 15 tickets clos. Post-mortem planifié. SLA respectés. Bien géré !', ok:'Promesse non tenue — la résolution en masse aurait été faite en 2 heures...', bad:'Les 15 tickets sont toujours ouverts à 17h...' }
+          }
+        ],
+        skills: { procedure:3, communication:2, qualification:1 }
+      },
+      user: {
+        npc_icon:'🎧', npc_name:'Helpdesk',
+        steps: [
+          {
+            context: 'Votre PC met 12 minutes à démarrer. Vous appelez le helpdesk. Comment expliquez-vous le problème ?',
+            npc_text: 'Bonjour, helpdesk à votre écoute !',
+            choices: [
+              { t:'Bonjour ! Thomas Martin du commerce. Mon PC met 12 minutes à démarrer depuis lundi. C\'est survenu après les mises à jour de vendredi soir. Pas de problème pendant la journée, juste au démarrage.', s:3, q:'good', fb:'✅ Description parfaite : nom, service, symptôme précis, chronologie, déclencheur probable. Le technicien a tout pour agir.' },
+              { t:'"Mon PC est lent."', s:0, q:'bad', fb:'❌ Beaucoup trop vague. Lent comment ? Depuis quand ? À quel moment ? Sans ces infos, le technicien ne peut pas diagnostiquer.' },
+              { t:'Bonjour, Thomas Martin, commerce. Mon PC prend très longtemps à démarrer depuis ce lundi — environ 12 minutes. Les MAJ de vendredi l\'ont peut-être causé ?', s:3, q:'good', fb:'✅ Excellent ! Vous avancez même une hypothèse basée sur la chronologie. Le technicien appréciera et gagnera du temps.' },
+              { t:'"Votre service est nul, mon PC est encore cassé !"', s:0, q:'bad', fb:'❌ Le technicien ne peut pas aider avec une plainte générale. Restez factuel — décrivez le symptôme, pas votre frustration.' }
+            ],
+            reply: { good:'Merci Thomas, je crée le ticket. Je prends la main à distance dans 5 minutes.', ok:'Pouvez-vous préciser depuis quand et quel type de lenteur ?', bad:'Je comprends votre mécontentement. Pouvez-vous me décrire le problème ?' }
+          }
+        ],
+        skills: { communication:2, qualification:2 }
+      }
+    }
+  },
+
+  {
+    id:'impression_hs', ref:'INC-3045', title:'Imprimante service RH hors service', prio:2, sla:45, cat:'Périphériques',
+    hour: 10,
+    roles: {
+      n1: {
+        npc_icon:'👤', npc_name:'Nadia — DRH',
+        steps: [
+          {
+            context: 'Nadia, responsable RH, appelle — l\'imprimante de son service ne fonctionne plus depuis 1h. 10 personnes bloquées. Elle a des bulletins de salaire à imprimer aujourd\'hui.',
+            npc_text: 'BONJOUR ! L\'imprimante de la RH est en panne depuis ce matin ! On est 10 personnes bloquées ! Et j\'ai les bulletins de salaire à sortir aujourd\'hui — c\'est le 25 du mois ! C\'est URGENT !',
+            choices: [
+              { t:'Bonjour Nadia ! Je crée un ticket P2 — impact fort. Quel est le message d\'erreur sur l\'imprimante ou sur les postes ? Et est-ce que le voyant power est allumé ?', s:3, q:'good', fb:'✅ Bien ! P2 approprié (10 personnes + contrainte métier). Questions de diagnostic ciblées sans se déplacer immédiatement.' },
+              { t:'Je viens sur place dans 1 heure.', s:1, q:'ok', fb:'⚠️ La visite sera peut-être nécessaire mais essayez d\'abord un diagnostic à distance — souvent plus rapide. Et 1h pour 10 personnes bloquées, c\'est trop.' },
+              { t:'Avez-vous essayé d\'éteindre et rallumer l\'imprimante ?', s:2, q:'ok', fb:'⚠️ Question N1 classique, acceptable en premier filtre. Mais qualifiez aussi l\'urgence et le nombre d\'utilisateurs impactés.' },
+              { t:'10 personnes bloquées + contrainte RH = P1. Je viens immédiatement et j\'informe mon manager.', s:3, q:'good', fb:'✅ Bonne évaluation — les bulletins de salaire sont une contrainte réglementaire (Code du travail). La décision de passer en P1 est justifiée.' }
+            ],
+            reply: { good:'Le voyant est allumé, orange clignotant. Sur les postes : "Imprimante hors ligne". On l\'a éteinte et rallumée — pareil.', ok:'Vous venez dans 1h ? On ne peut vraiment pas attendre — c\'est les salaires !', bad:'Oui on a essayé. Ça ne change rien.' }
+          },
+          {
+            context: 'L\'imprimante affiche "Bourrage papier". Vous arrivez sur place. Comment procédez-vous ?',
+            npc_text: 'Voilà, vous êtes là. L\'écran de l\'imprimante dit "Bourrage — Zone C". On n\'ose pas toucher.',
+            choices: [
+              { t:'Suivre les instructions de l\'imprimante pour la zone C — ouvrir le capot indiqué, retirer délicatement le papier coincé sans forcer, refermer et tester.', s:3, q:'good', feedback:'✅ Procédure correcte. Toujours suivre les instructions de l\'appareil pour les bourrages, sans forcer pour ne pas endommager les rouleaux.' },
+              { t:'Tirer le papier par le plateau d\'alimentation principal en forçant.', s:0, q:'bad', fb:'❌ Forcer sans ouvrir la bonne zone déchire le papier et peut coincer des morceaux inaccessibles. Toujours suivre la procédure du constructeur.' },
+              { t:'Appeler le prestataire de maintenance pour qu\'il vienne — c\'est leur travail.', s:0, q:'bad', fb:'❌ Un bourrage papier est de la résolution N1 standard. Appeler un prestataire pour ça est disproportionné et lent.' },
+              { t:'Ouvrir avec précaution la zone C, retirer le papier, vérifier qu\'il ne reste pas de morceaux, refermer, lancer une impression test.', s:3, q:'good', fb:'✅ Parfait — vous ajoutez la vérification qu\'il ne reste pas de morceaux, étape souvent oubliée qui évite un second bourrage.' }
+            ],
+            reply: { good:'Ça marche ! Les bulletins s\'impriment. Merci, vous avez été très réactif !', ok:'Super, ça imprime. Merci !', bad:'Il y a du papier déchiré à l\'intérieur maintenant... ça fait un bruit bizarre.' }
+          }
+        ],
+        skills: { qualification:2, communication:2, diagnostic:1 }
+      },
+      n2: {
+        npc_icon:'🎧', npc_name:'N1',
+        steps: [
+          {
+            context: 'L\'imprimante RH a eu 4 bourrages cette semaine. Le N1 vous demande si c\'est normal.',
+            npc_text: '4 bourrages cette semaine sur l\'HP-RH-01. Le N1 intervient à chaque fois. Matériel défaillant ?',
+            choices: [
+              { t:'Vérifier : type de papier utilisé, âge de l\'imprimante, historique de maintenance, et état des rouleaux d\'entraînement. 4 bourrages/semaine est anormal.', s:3, q:'good', fb:'✅ Diagnostic N2 structuré. Vous cherchez la cause racine plutôt que de traiter le 4ème symptôme.' },
+              { t:'Continuer à traiter les bourrages au cas par cas.', s:0, q:'bad', fb:'❌ 4 bourrages/semaine signale un problème systémique. Répéter la même action N1 n\'est pas de la valeur ajoutée N2.' },
+              { t:'Remplacer immédiatement l\'imprimante.', s:1, q:'ok', fb:'⚠️ Peut-être nécessaire mais vérifiez d\'abord : papier de mauvaise qualité, mauvais grammage, ou rouleaux encrassés peuvent être la cause et se résoudre facilement.' },
+              { t:'Inspecter les rouleaux (encrassement probable), nettoyer avec alcool isopropylique, changer le papier si grammage incorrect, et tester.', s:3, q:'good', fb:'✅ Diagnostic et action technique appropriés. Les rouleaux encrassés sont la cause N°1 de bourrages récurrents.' }
+            ],
+            reply: { good:'Rouleaux encrassés confirmés. Nettoyage effectué. Papier remplacé (grammage 90g/m² incompatible). Plus de bourrage depuis 3 jours.', ok:'Bonne idée de remplacer — mais l\'ancienne imprimante avait les mêmes rouleaux encrassés...', bad:'5ème bourrage ce matin...' }
+          }
+        ],
+        skills: { diagnostic:3, procedure:2 }
+      },
+      mgr: {
+        npc_icon:'📊', npc_name:'DRH',
+        steps: [
+          {
+            context: 'La DRH vous contacte directement : les bulletins de salaire n\'ont pas pu être imprimés à temps. Elle envisage de porter une réclamation formelle.',
+            npc_text: 'Votre équipe n\'a pas résolu la panne à temps. Les bulletins ont dû être repoussés. C\'est une obligation légale ! Qu\'allez-vous faire ?',
+            choices: [
+              { t:'Reconnaître la situation, analyser pourquoi le SLA n\'a pas été tenu (priorité trop basse ? ressources insuffisantes ?), proposer un plan correctif et s\'engager sur une amélioration.', s:3, q:'good', fb:'✅ Gestion de réclamation professionnelle : responsabilité assumée + analyse + plan correctif + engagement. C\'est ce qu\'attend la direction.' },
+              { t:'Expliquer que le ticket était dans la file et que l\'équipe a fait son mieux.', s:0, q:'bad', fb:'❌ "On a fait notre mieux" n\'est pas une réponse managériale acceptable. Analysez ce qui a dysfonctionné et proposez des améliorations.' },
+              { t:'Promettre que ça ne se reproduira jamais.', s:0, q:'bad', fb:'❌ Des promesses absolues sont dangereuses — vous ne contrôlez pas tous les paramètres. Engagez-vous sur des actions concrètes et mesurables.' },
+              { t:'Créer un SLA spécifique "Services critiques RH" avec escalade automatique P1 pour les périodes de paie, et présenter ce plan à la DRH.', s:3, q:'good', fb:'✅ Excellent ! Vous transformez l\'incident en amélioration structurelle. Un SLA dédié aux contraintes métier critiques est une bonne pratique ITIL.' }
+            ],
+            reply: { good:'C\'est exactement ce qu\'on attendait. Merci pour cette réponse constructive.', ok:'... C\'est insuffisant comme réponse pour une obligation légale.', bad:'Je transmets à la direction générale.' }
+          }
+        ],
+        skills: { communication:3, procedure:2 }
+      },
+      user: {
+        npc_icon:'🎧', npc_name:'Support',
+        steps: [
+          {
+            context: 'L\'imprimante de votre service est en panne. Vous devez imprimer des bulletins de salaire aujourd\'hui (obligation légale). Comment signalez-vous ?',
+            npc_text: null,
+            choices: [
+              { t:'Appeler le helpdesk : "Bonjour, Nadia Dupont, RH. L\'imprimante HP-RH-01 est hors ligne depuis 8h30 — 10 utilisateurs bloqués. C\'est urgent : on doit imprimer les bulletins de salaire ce jour (25 du mois)."', s:3, q:'good', fb:'✅ Signalement parfait avec contexte métier critique ! Mentionner l\'obligation réglementaire (bulletins de salaire) permet une priorité correcte.' },
+              { t:'Envoyer un email "l\'imprimante est cassée" et attendre.', s:0, q:'bad', fb:'❌ Pour une urgence avec 10 personnes bloquées et une contrainte légale, appelez directement. L\'email peut rester non-lu des heures.' },
+              { t:'Attendre que quelqu\'un d\'autre signale le problème.', s:0, q:'bad', fb:'❌ En tant qu\'utilisateur confronté à un problème bloquant, vous avez la responsabilité de le signaler. N\'attendez pas que quelqu\'un d\'autre le fasse.' },
+              { t:'Appeler le helpdesk, expliquer l\'urgence et l\'impact (10 personnes + bulletins), et demander une priorité haute.', s:3, q:'good', fb:'✅ Parfait ! Vous défendez légitimement la priorité en expliquant l\'impact métier réel. Le helpdesk peut ainsi classer correctement le ticket.' }
+            ],
+            reply: { good:'Compris ! Je classe en P2 immédiatement. Je viens sur place dans 15 minutes.', ok:'Je prends note. Quel est le message d\'erreur ?', bad:'Ticket ouvert. Délai estimé : 2 heures.' }
+          }
+        ],
+        skills: { communication:3, qualification:2 }
+      }
+    }
+  },
+
+  {
+    id:'vpn_tele', ref:'INC-3089', title:'VPN impossible en télétravail', prio:2, sla:45, cat:'Réseau',
+    hour: 11,
+    roles: {
+      n1: {
+        npc_icon:'👤', npc_name:'Marc — Commercial terrain',
+        steps: [
+          {
+            context: 'Marc, commercial en télétravail chez un client, ne peut pas se connecter au VPN. Erreur 789. Il a une réunion dans 45 minutes et besoin des données CRM.',
+            npc_text: 'Bonjour ! Je suis Marc, commercial. Je suis chez un client à Lyon pour une réunion dans 45 min et le VPN ne marche pas. Erreur 789. J\'ai besoin de mon CRM MAINTENANT.',
+            choices: [
+              { t:'Erreur 789 = problème L2TP/IPsec. Demandez à Marc de tester avec son smartphone en partage de connexion 4G — si ça marche, le problème vient du réseau du client, pas de votre config.', s:3, q:'good', fb:'✅ Excellent diagnostic ! Vous connaissez l\'erreur 789 ET utilisez le test 4G pour isoler rapidement le problème (client vs réseau hôte).' },
+              { t:'Désinstallez et réinstallez le client VPN.', s:0, q:'bad', fb:'❌ La réinstallation prend du temps et l\'erreur 789 est rarement liée à la corruption du client. Diagnostiquez d\'abord.' },
+              { t:'Vérifiez que le VPN de l\'entreprise est bien opérationnel de notre côté, puis guidez Marc pour tester avec sa 4G.', s:3, q:'good', fb:'✅ Parfait ! Vous vérifiez l\'infra d\'abord (côté serveur) puis isolez le problème réseau avec le test 4G. Méthode exemplaire.' },
+              { t:'Demandez à Marc de revenir au bureau pour se connecter depuis là.', s:0, q:'bad', fb:'❌ Marc a une réunion chez le client ! C\'est totalement impraticable. Trouvez une solution sur place.' }
+            ],
+            reply: { good:'Je teste avec ma 4G... ça marche ! Donc c\'est le Wi-Fi du client qui bloque mon VPN.', ok:'OK, le VPN de l\'entreprise est opérationnel. Et avec la 4G ça marche pour Marc !', bad:'Revenir au bureau ?? Ma réunion est dans 40 min !' }
+          },
+          {
+            context: 'Le réseau du client bloque le VPN. Marc peut utiliser son 4G mais la data sera limitée. Il a besoin du CRM pendant 3h. Que proposez-vous ?',
+            npc_text: 'OK, en 4G ça marche. Mais j\'ai seulement 5 Go de data ce mois-ci et je dois travailler 3h sur le CRM. Vous avez une autre solution ?',
+            choices: [
+              { t:'Proposer d\'activer un hotspot depuis un autre smartphone collègue, ou configurer le VPN sur le port TCP 443 (souvent non-filtré) pour contourner le blocage du réseau client.', s:3, q:'good', fb:'✅ Solutions créatives et techniques ! Le port 443 est rarement filtré car c\'est HTTPS — c\'est un contournement N2 efficace.' },
+              { t:'Marc n\'a qu\'à limiter son utilisation du CRM.', s:0, q:'bad', fb:'❌ Le CRM est nécessaire pour sa réunion client — vous ne pouvez pas lui demander de limiter son usage professionnel.' },
+              { t:'Demander à l\'hôte d\'ouvrir le port VPN sur son réseau.', s:1, q:'ok', fb:'⚠️ Possible mais délicat (demander à un client d\'ouvrir son réseau) et prend du temps. Proposez d\'abord une solution qui ne dépend pas de tiers.' },
+              { t:'Vérifier si le CRM est accessible via le portail web sans VPN — souvent une option sur les CRM modernes.', s:3, q:'good', fb:'✅ Excellente alternative ! De nombreux CRM (Salesforce, HubSpot) ont une interface web accessible sans VPN. Solution élégante qui préserve la data 4G.' }
+            ],
+            reply: { good:'Le CRM web fonctionne ! Pas besoin de VPN pour ça. Je peux faire ma réunion. Merci !', ok:'Bonne idée pour le port 443. On essaie.', bad:'Limiter... mais j\'ai besoin de tout !' }
+          }
+        ],
+        skills: { diagnostic:3, communication:2 }
+      },
+      n2: {
+        npc_icon:'🎧', npc_name:'N1 — Réseau',
+        steps: [
+          {
+            context: 'Le N1 vous escalade : 8 commerciaux en télétravail ont des problèmes VPN ce mois-ci depuis différents sites clients. C\'est récurrent.',
+            npc_text: '8 incidents VPN ce mois depuis des sites clients différents. Tous bloqués sur les ports UDP du VPN. C\'est une tendance ou une config à revoir ?',
+            choices: [
+              { t:'Analyser les 8 incidents : ports bloqués, erreurs communes, géographies. Proposer : migration vers VPN SSL sur port 443 (universellement ouvert), test pilote sur 5 commerciaux.', s:3, q:'good', fb:'✅ Analyse des tendances + solution technique pérenne. Le VPN SSL/443 résout le problème systémique de filtrage réseau externe.' },
+              { t:'Continuer à résoudre au cas par cas.', s:0, q:'bad', fb:'❌ 8 incidents identiques = problème systémique. La résolution N1 individuelle n\'est pas scalable.' },
+              { t:'Distribuer des clés 4G illimitées à tous les commerciaux.', s:1, q:'ok', fb:'⚠️ Solution de contournement valide à court terme mais coûteuse et ne résout pas le fond. La migration VPN SSL est plus appropriée.' },
+              { t:'Documenter la tendance, remonter à la DSI avec une recommandation de migration VPN SSL, et créer un article KB "VPN depuis réseau externe".', s:3, q:'good', fb:'✅ Approche N2 complète : documentation + escalade décisionnelle + Knowledge Base. C\'est de la valeur ajoutée.' }
+            ],
+            reply: { good:'DSI validé. Migration VPN SSL planifiée. 8 incidents fermés. KB créée. Excellent travail.', ok:'Clés 4G distribuées. Problème reporté mais pas résolu.', bad:'9ème incident cette semaine...' }
+          }
+        ],
+        skills: { diagnostic:3, procedure:2, qualification:1 }
+      },
+      mgr: {
+        npc_icon:'📊', npc_name:'Direction Commerciale',
+        steps: [
+          {
+            context: 'Le directeur commercial vous contacte : ses équipes terrain perdent en moyenne 45 minutes par incident VPN. Il veut des chiffres et une solution.',
+            npc_text: '8 commerciaux × 45 min perdues × 4 incidents = 24h de productivité perdue ce mois. Ce n\'est pas acceptable. Qu\'est-ce que vous proposez concrètement ?',
+            choices: [
+              { t:'Présenter un plan : migration VPN SSL (2 semaines, 0 impact utilisateur), formation 30 min, réduction estimée des incidents de 90%. ROI calculé : 24h/mois → 2h/mois.', s:3, q:'good', fb:'✅ Réponse manager avec ROI chiffré ! La direction commerciale parle en productivité et coûts — vous leur répondez dans leur langue.' },
+              { t:'Demander plus de temps pour analyser.', s:0, q:'bad', fb:'❌ Vous avez les données. La direction attend une réponse structurée, pas un délai supplémentaire.' },
+              { t:'Promettre que ça sera mieux le mois prochain.', s:0, q:'bad', fb:'❌ Promesse sans plan concret = perte de crédibilité. Proposez des actions et des métriques.' },
+              { t:'Valider l\'analyse des pertes, proposer la migration VPN SSL avec planning et budget, et vous engager sur un KPI : moins de 2 incidents/mois sous 30 jours.', s:3, q:'good', fb:'✅ Excellent ! Vous validez les données du directeur (respect), proposez une solution concrète avec planning et budget, et prenez un engagement mesurable.' }
+            ],
+            reply: { good:'Bien. Je vous accorde le budget pour la migration. Je veux un bilan à 30 jours.', ok:'C\'est une direction mais où est le planning précis ?', bad:'C\'est vague. Revenez avec quelque chose de concret.' }
+          }
+        ],
+        skills: { communication:3, procedure:2, qualification:1 }
+      },
+      user: {
+        npc_icon:'🎧', npc_name:'Helpdesk',
+        steps: [
+          {
+            context: 'Vous êtes chez un client. Le VPN ne fonctionne pas. Réunion dans 45 min. Comment contactez-vous le support ?',
+            npc_text: null,
+            choices: [
+              { t:'Appeler le helpdesk depuis mon mobile : "Marc Martin, commercial. VPN impossible depuis le site client Acme Lyon, erreur 789, réunion dans 45 min, besoin urgent du CRM."', s:3, q:'good', fb:'✅ Signalement complet avec contexte urgence et contrainte temporelle. Le technicien peut prioriser immédiatement.' },
+              { t:'Envoyer un email depuis mon téléphone.', s:1, q:'ok', fb:'⚠️ L\'email est possible depuis le mobile mais l\'appel est plus rapide pour une urgence avec un délai serré.' },
+              { t:'Attendre d\'être de retour au bureau pour signaler.', s:0, q:'bad', fb:'❌ Vous avez besoin du CRM MAINTENANT. Signalez immédiatement pour que le support puisse vous aider avant votre réunion.' },
+              { t:'Appeler et dire : "Le VPN ne marche pas, venez m\'aider."', s:0, q:'bad', fb:'❌ Vague et impossible à distance. Précisez : qui vous êtes, où vous êtes, quelle erreur vous avez, et quel est le délai.' }
+            ],
+            reply: { good:'Marc, je prends le ticket en urgence. Testez avec votre 4G pendant que je vérifie notre VPN.', ok:'Quel est le message d\'erreur exact ?', bad:'Où êtes-vous ? Quel type de problème ?' }
+          }
+        ],
+        skills: { communication:3, qualification:2 }
+      }
+    }
+  },
+
+  {
+    id:'phishing_report', ref:'INC-3201', title:'URGENT — Suspicion phishing utilisateur cliqué', prio:1, sla:20, cat:'Sécurité',
+    hour: 14,
+    roles: {
+      n1: {
+        npc_icon:'👤', npc_name:'Sophie — Comptabilité',
+        steps: [
+          {
+            context: 'ALERTE P1 — Sophie a reçu un email du "directeur financier" lui demandant des identifiants. Elle a cliqué ET saisi ses identifiants il y a 10 minutes.',
+            npc_text: 'Bonjour, j\'ai reçu un email de M. Dupont (DG) me demandant de valider mes accès. J\'ai cliqué sur le lien et entré mon login et mot de passe. Maintenant j\'ai un doute... c\'est un vrai email ou pas ?',
+            choices: [
+              { t:'URGENT — Compte potentiellement compromis. Demandez à Sophie de NE RIEN FAIRE sur son PC. Je bloque le compte dans l\'AD immédiatement et j\'alerte le RSSI.', s:3, q:'good', fb:'✅ Réaction d\'urgence correcte ! Isolation compte + alerte sécurité. Ne pas perdre de temps en questions — agir d\'abord.' },
+              { t:'Rassurez Sophie, ce sont probablement des spams, vérifiez quand même son compte.', s:0, q:'bad', fb:'❌ Une saisie d\'identifiants sur un site de phishing est un incident de sécurité majeur. Ne minimisez JAMAIS ce type de signalement.' },
+              { t:'Demandez à Sophie de changer son mot de passe immédiatement.', s:1, q:'ok', fb:'⚠️ Le changement de MDP est une étape, mais bloquez d\'abord le compte — l\'attaquant pourrait être notifié du changement et réagir plus vite. Bloquez, puis changez.' },
+              { t:'Bloquer le compte AD, alerter le RSSI, demander à Sophie de ne pas éteindre son PC (preuves forensiques), et noter l\'heure exacte de l\'incident.', s:3, q:'good', fb:'✅ PARFAIT ! Procédure complète : isolation + alerte + préservation des preuves + horodatage. C\'est la réponse N1 exemplaire à un incident de sécurité.' }
+            ],
+            reply: { good:'Compte bloqué. RSSI alerté. Sophie sécurisée. Logs consultés : connexion depuis IP russe 8 min après la saisie.', ok:'Compte bloqué mais l\'attaquant s\'est déjà connecté avant le changement de MDP...', bad:'Sophie est inquiète mais pense que c\'était peut-être juste un test interne...' }
+          }
+        ],
+        skills: { securite:3, procedure:3, qualification:2 }
+      },
+      n2: {
+        npc_icon:'🎧', npc_name:'N1 + RSSI',
+        steps: [
+          {
+            context: 'Le RSSI vous mandate : analyser l\'étendue de la compromission du compte de Sophie. Elle est cheffe comptable et a accès au serveur financier.',
+            npc_text: 'INC-3201 — Sophie Leroi, cheffe comptable. Compte compromis. Accès : serveur financier, ERP compta, données RH. Évaluez l\'impact. Les attaquants avaient 8 min d\'accès.',
+            choices: [
+              { t:'Analyser les logs d\'accès du compte Sophie sur les 8 minutes : quels serveurs, quels fichiers accédés, données copiées ou exfiltrées. Rapport dans 30 min.', s:3, q:'good', fb:'✅ Forensic rapide et ciblé. Les logs des 8 minutes critiques vous diront exactement ce que l\'attaquant a vu et/ou pris.' },
+              { t:'Reformater le PC de Sophie pour éliminer tout risque.', s:0, q:'bad', fb:'❌ Le reformatage détruit les preuves forensiques dont le RSSI et potentiellement la justice auront besoin. Ne touchez pas au matériel sans instruction.' },
+              { t:'Analyser les logs d\'accès, bloquer l\'IP source, analyser le domaine de phishing pour identifier d\'autres victimes potentielles dans l\'entreprise.', s:3, q:'good', fb:'✅ Excellent ! Vous élargissez l\'investigation — si ce phishing a ciblé Sophie, d\'autres employés ont peut-être reçu le même email et cliqué.' },
+              { t:'Changer tous les mots de passe de l\'entreprise par précaution.', s:1, q:'ok', fb:'⚠️ Mesure extrême et perturbatrice. Ciblez d\'abord les comptes à risque identifiés, pas tous les comptes. L\'analyse forensique guidera les actions.' }
+            ],
+            reply: { good:'Logs analysés : 2 fichiers Excel téléchargés (tableaux de trésorerie Q3). 3 autres destinataires du phishing identifiés — préventifs bloqués.', ok:'IP bloquée. Le domaine de phishing a ciblé 12 autres employés — 3 ont peut-être cliqué.', bad:'Tous les MDP changés. Production arrêtée 2h. Pas de trace d\'accès anormal trouvée.' }
+          }
+        ],
+        skills: { securite:3, diagnostic:3, procedure:2 }
+      },
+      mgr: {
+        npc_icon:'📊', npc_name:'PDG + RSSI',
+        steps: [
+          {
+            context: 'Incident de sécurité confirmé — données financières potentiellement exfiltrées. Le PDG veut un briefing immédiat et demande si la presse doit être notifiée.',
+            npc_text: 'Des données financières ont peut-être été volées. Est-ce qu\'on a une obligation légale de notifier ? Et est-ce qu\'on prévient nos partenaires financiers ?',
+            choices: [
+              { t:'Activer la cellule de crise : RSSI, DPO, direction juridique. Le DPO évalue l\'obligation RGPD (notification CNIL sous 72h si données personnelles). Les partenaires financiers sont notifiés si données les concernant. Communication maîtrisée.', s:3, q:'good', fb:'✅ Gestion de crise au niveau direction exemplaire ! RGPD + obligation légale + parties prenantes + communication maîtrisée. Vous maîtrisez les enjeux.' },
+              { t:'Rien ne dit que les données ont été volées — attendons de voir avant de paniquer.', s:0, q:'bad', fb:'❌ "Peut-être" en sécurité = traiter comme "oui" jusqu\'à preuve du contraire. L\'inaction face à une potentielle violation RGPD peut coûter très cher (4% du CA).' },
+              { t:'Annoncer publiquement l\'incident pour montrer la transparence de l\'entreprise.', s:0, q:'bad', fb:'❌ La communication publique prématurée sans analyse complète peut amplifier le problème et créer une panique inutile. La transparence se gère avec méthode.' },
+              { t:'Briefer le PDG avec les faits connus, activer DPO pour l\'évaluation RGPD, préparer une communication interne et externe contrôlée, et documenter toutes les décisions.', s:3, q:'good', fb:'✅ Réponse de crise complète ! Vous gérez l\'information (PDG), le légal (DPO/RGPD), la communication et la traçabilité des décisions.' }
+            ],
+            reply: { good:'Bien géré. Le DPO notifie la CNIL. Communication partenaires préparée. Post-mortem la semaine prochaine.', ok:'OK pour le DPO. Et la communication interne, on dit quoi aux employés ?', bad:'Vous attendez ? Si la presse apprend ça avant nous, ça sera pire...' }
+          }
+        ],
+        skills: { securite:3, communication:3, procedure:3 }
+      },
+      user: {
+        npc_icon:'🎧', npc_name:'Support Sécurité',
+        steps: [
+          {
+            context: 'Vous avez reçu un email du "DG" et cliqué sur un lien en entrant vos identifiants. Vous avez maintenant un doute. Que faites-vous ?',
+            npc_text: null,
+            choices: [
+              { t:'Appeler immédiatement le helpdesk en expliquant exactement ce qui s\'est passé, sans rien faire d\'autre sur le PC.', s:3, q:'good', fb:'✅ Réaction parfaite ! Signalement immédiat + ne toucher à rien = maximise les chances de limiter les dégâts. Le temps est critique.' },
+              { t:'Changer votre mot de passe et ne rien dire — peut-être que ce n\'est rien.', s:0, q:'bad', fb:'❌ "Peut-être que ce n\'est rien" est dangereux. Et changer le MDP sans alerter le support peut permettre à l\'attaquant d\'agir entre les deux.' },
+              { t:'Éteindre le PC pour être sûr.', s:0, q:'bad', fb:'❌ Éteindre le PC détruit des preuves forensiques en mémoire vive (processus en cours, connexions actives) dont l\'équipe de sécurité a besoin.' },
+              { t:'Signaler immédiatement au helpdesk ET à votre responsable direct, sans toucher au PC, en notant l\'heure exacte et le lien sur lequel vous avez cliqué.', s:3, q:'good', fb:'✅ Excellent réflexe ! Double signalement + préservation des preuves + horodatage. Vous limitez activement l\'impact de l\'incident.' }
+            ],
+            reply: { good:'Merci d\'avoir signalé immédiatement ! Je bloque votre compte et alerte la sécurité. Ne touchez à rien.', ok:'Compte bloqué. Mais vous avez attendu combien de temps avant d\'appeler ?', bad:'Compte bloqué. Mais l\'attaquant a eu 20 minutes d\'avance...' }
+          }
+        ],
+        skills: { securite:3, communication:2 }
+      }
+    }
+  },
+
+  {
+    id:'panne_serveur', ref:'INC-3456', title:'Serveur de fichiers inaccessible — 45 utilisateurs', prio:1, sla:15, cat:'Infrastructure',
+    hour: 15,
+    roles: {
+      n1: {
+        npc_icon:'👤', npc_name:'Responsable Production',
+        steps: [
+          {
+            context: 'P1 — Le serveur de fichiers FILE-SRV-01 est inaccessible. 45 utilisateurs bloqués depuis 20 minutes. Production arrêtée.',
+            npc_text: 'ALERTE — plus personne n\'a accès aux fichiers partagés sur FILE-SRV-01 ! 45 personnes sont bloquées. La production est à l\'arrêt. C\'est CRITIQUE !',
+            choices: [
+              { t:'P1 déclaré. Je contacte immédiatement le N2 infrastructure ET j\'alerte mon manager. Je crée le ticket d\'incident majeur et je reste en ligne pour coordonner.', s:3, q:'good', fb:'✅ Parfait N1 ! Sur un P1 multi-utilisateurs, votre rôle est de déclarer, escalader immédiatement, alerter la chaîne et coordonner — pas de chercher à résoudre seul.' },
+              { t:'Je vais essayer de redémarrer le serveur via l\'interface d\'administration.', s:0, q:'bad', fb:'❌ Ne jamais redémarrer un serveur de production sans diagnostic et sans autorisation du N2/N3. Vous pourriez aggraver la situation.' },
+              { t:'Demandez aux 45 utilisateurs de se déconnecter et reconnecter.', s:0, q:'bad', fb:'❌ Hors sujet — si le serveur est inaccessible, la reconnexion ne changera rien. Escaladez immédiatement au niveau approprié.' },
+              { t:'Ticket P1 créé, N2 infrastructure appelé, manager alerté, 2 communications envoyées : utilisateurs (patience) et direction (incident en cours, ETA 30 min).', s:3, q:'good', fb:'✅ Gestion P1 complète niveau N1 ! Vous êtes le coordinateur — ticket + escalade + communication utilisateurs + communication direction.' }
+            ],
+            reply: { good:'N2 infra sur le cas. Root cause identifiée : disque saturé. Espace libéré. Service restauré en 12 min.', ok:'N2 arrivé. Investigation en cours.', bad:'Le redémarrage a mis le serveur en mode récupération. 3h d\'attente minimum...' }
+          }
+        ],
+        skills: { qualification:3, procedure:3, communication:2 }
+      },
+      n2: {
+        npc_icon:'🎧', npc_name:'N1 — Infrastructure',
+        steps: [
+          {
+            context: 'P1 — FILE-SRV-01 inaccessible. 45 utilisateurs. Vous avez accès à la console d\'administration. Quelle est votre première action ?',
+            npc_text: 'P1 déclaré. FILE-SRV-01 inaccessible. Accès console disponible. Le service répond pas depuis 20 min.',
+            choices: [
+              { t:'Vérifier dans l\'ordre : état du service Windows (arrêté ?), espace disque (saturé ?), RAM/CPU (surcharge ?), derniers événements du journal système.', s:3, q:'good', fb:'✅ Diagnostic systématique et priorisé. Vous éliminez les causes les plus courantes dans l\'ordre de probabilité décroissante.' },
+              { t:'Redémarrer le serveur immédiatement.', s:0, q:'bad', fb:'❌ Redémarrer sans diagnostic peut perdre des données non-sauvegardées et masquer la cause. Diagnostiquez d\'abord, même 5 minutes de diagnostic valent mieux qu\'un redémarrage non-éclairé.' },
+              { t:'Console : vérifier l\'espace disque sur tous les volumes. Cause N°1 des pannes serveur de fichiers.', s:3, q:'good', fb:'✅ Bon réflexe ! Le disque saturé est statistiquement la cause la plus fréquente d\'inaccessibilité serveur de fichiers. Excellent instinct.' },
+              { t:'Appeler le prestataire hébergeur pour qu\'il investigate.', s:0, q:'bad', fb:'❌ Si vous avez accès à la console, investiguer d\'abord vous-même. Appeler le prestataire pour un diagnostic que vous pouvez faire en 2 minutes est inefficace.' }
+            ],
+            reply: { good:'Volume C: → 100% utilisé (0 octets libres). Le service SMB refuse de démarrer faute d\'espace. Cause identifiée.', ok:'Journal système : erreur "Not enough disk space" à 14h32.', bad:'Redémarrage : le serveur démarre mais tombe à nouveau après 30 secondes.' }
+          },
+          {
+            context: 'Disque saturé — Volume C: à 100%. Comment libérez-vous de l\'espace rapidement et durablement ?',
+            npc_text: 'Volume C: 100% — 0 octet libre. Les logs IIS représentent 45 Go (jamais purgés). Les temp Windows font 8 Go. Service fichiers redémarre dès qu\'on libère 1 Go.',
+            choices: [
+              { t:'Action immédiate : purger les logs IIS anciens (> 30j) et nettoyer les temp. Service restauré en 5 min. Action durable : configurer une rotation automatique des logs + alerte monitoring à 85%.', s:3, q:'good', fb:'✅ Solution exemplaire : résolution immédiate + mesure préventive pour éviter la récidive. C\'est ça la valeur ajoutée N2.' },
+              { t:'Supprimer tous les logs du serveur pour libérer de l\'espace.', s:0, q:'bad', fb:'❌ Les logs sont des preuves forensiques et peuvent être requis légalement. Supprimez avec méthode (ancienneté, archivage) pas en masse.' },
+              { t:'Ajouter un disque dur supplémentaire au serveur.', s:1, q:'ok', fb:'⚠️ Solution à long terme valide, mais ça prend du temps (achat + installation) et les 45 utilisateurs attendent maintenant. Libérez d\'abord de l\'espace, ajoutez du disque ensuite.' },
+              { t:'Purger les logs IIS > 30 jours, nettoyer les temp, archiver les fichiers anciens sur un NAS, et configurer une tâche planifiée de purge automatique + alerte Zabbix à 80%.', s:3, q:'good', fb:'✅ Solution complète niveau architecte ! Résolution + archivage (données préservées) + automatisation + monitoring proactif.' }
+            ],
+            reply: { good:'Service restauré. 45 utilisateurs reconnectés. Alerte monitoring configurée. Post-mortem : rotation logs activée.', ok:'Service restauré. Mais le disque sera saturé à nouveau dans 3 semaines sans action préventive.', bad:'Devis matériel demandé... les utilisateurs attendent depuis 45 min.' }
+          }
+        ],
+        skills: { diagnostic:3, procedure:3, securite:1 }
+      },
+      mgr: {
+        npc_icon:'📊', npc_name:'Direction + Équipe',
+        steps: [
+          {
+            context: 'P1 déclaré — 45 utilisateurs, production arrêtée, SLA déjà dépassé. La direction vous appelle.',
+            npc_text: 'Ça fait 25 minutes que la production est à l\'arrêt ! Qu\'est-ce que vous faites et dans combien de temps c\'est résolu ?',
+            choices: [
+              { t:'Informer la direction : cause identifiée (disque saturé), N2 en cours de résolution, ETA 15 minutes pour la restauration de service, mise à jour dès résolution.', s:3, q:'good', fb:'✅ Communication de crise parfaite ! Vous donnez : cause (vous contrôlez), action en cours (rassurant), ETA (concret), engagement de suivi.' },
+              { t:'Dire que vous n\'avez pas encore l\'information.', s:0, q:'bad', fb:'❌ Vous devez avoir l\'information en temps réel sur un P1. Restez en contact avec votre N2 et relayez les mises à jour à la direction.' },
+              { t:'Promettre que ce sera résolu dans 5 minutes.', s:0, q:'bad', fb:'❌ Ne promettez que ce que vous contrôlez. Si votre N2 dit 15 minutes, ne promettez pas 5.' },
+              { t:'Briefer la direction avec les faits, lancer une communication aux 45 utilisateurs, coordonner l\'ETA avec le N2, et préparer un plan préventif à présenter en post-mortem.', s:3, q:'good', fb:'✅ Gestion complète : direction informée + utilisateurs rassurés + coordination technique + préparation post-mortem. Rien n\'est oublié.' }
+            ],
+            reply: { good:'Bien géré. Service restauré à 15h17. Post-mortem accepté. Proposez des mesures préventives.', ok:'15 minutes ? Le SLA est déjà dépassé...', bad:'Vous n\'avez pas l\'info ? Alors qui l\'a ?' }
+          }
+        ],
+        skills: { communication:3, procedure:2, qualification:2 }
+      },
+      user: {
+        npc_icon:'🎧', npc_name:'Helpdesk',
+        steps: [
+          {
+            context: 'Vous n\'avez plus accès aux fichiers partagés. Votre chef vous presse pour un rapport urgent. Que faites-vous ?',
+            npc_text: null,
+            choices: [
+              { t:'Appeler le helpdesk en précisant : le nom du serveur (FILE-SRV-01), depuis quand, si vos collègues ont le même problème, et que vous avez un rapport urgent à rendre.', s:3, q:'good', fb:'✅ Signalement précis avec contexte d\'urgence. La mention que plusieurs personnes sont touchées permet au helpdesk de déclarer un incident majeur.' },
+              { t:'Essayer de redémarrer votre PC pour voir si ça résout le problème.', s:0, q:'bad', fb:'❌ Si le serveur est en panne, redémarrer votre PC ne changera rien. Signalez au helpdesk immédiatement.' },
+              { t:'Attendre que ça repasse tout seul.', s:0, q:'bad', fb:'❌ Un serveur ne redémarre pas seul. Signalez le problème pour que le support puisse intervenir.' },
+              { t:'Appeler le helpdesk, signaler l\'incident, vérifier si des collègues sont aussi touchés et le mentionner, et demander un ETA pour adapter votre travail.', s:3, q:'good', fb:'✅ Excellent ! Vous fournissez des infos utiles (périmètre) et vous adaptez en demandant un ETA pour gérer votre urgence métier.' }
+            ],
+            reply: { good:'Incident P1 déclaré. ETA : 15 minutes. Merci pour les infos sur l\'impact réel.', ok:'Je vérifie. Vous êtes le seul ou vos collègues aussi ?', bad:'Ticket créé. On regarde.' }
+          }
+        ],
+        skills: { qualification:2, communication:2 }
+      }
+    }
+  }
+
+];
+
+// ═══════════════════════════ GAME STATE ═══════════════════════════
+let G = {
+  role: null,
+  sessionDurationMin: 30,
+  started: false,
+  // Time: simulated day 8h → 18h = 600 sim minutes
+  // realMs per simMin = sessionDurationMin * 60000 / 600
+  simMinute: 0, // current sim minute (0 = 8:00, 600 = 18:00)
+  clockInterval: null,
+  ticketSpawnCheck: null,
+  slaInterval: null,
+  // Tickets
+  queue: [], // {ticketData, status, spawnedSim, slaRemaining}
+  activeTicket: null,
+  currentStep: 0,
+  // Stats
+  xp: 0,
+  level: 1,
+  score: 0,
+  resolved: 0,
+  slaBreached: 0,
+  slaOk: 0,
+  csat: 5.0,
+  skills: { qualification:0, diagnostic:0, communication:0, procedure:0, securite:0 },
+  // Interrupt
+  pendingInterrupt: null
+};
+
+// ═══════════════════════════ INTRO LOGIC ═══════════════════════════
+function pickRole(el) {
+  document.querySelectorAll('.role-tile').forEach(t => t.classList.remove('sel'));
+  el.classList.add('sel');
+  G.role = el.dataset.role;
+  document.getElementById('btn-launch').disabled = false;
+}
+function pickDur(el) {
+  document.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  G.sessionDurationMin = parseInt(el.dataset.dur);
+}
+
+// ═══════════════════════════ LAUNCH ═══════════════════════════
+function launchGame() {
+  if (!G.role) return;
+  showScreen('s-game');
+  initGame();
+}
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function initGame() {
+  const r = ROLE_DEFS[G.role];
+  document.getElementById('role-dot').style.background = r.dot;
+  document.getElementById('role-chip-name').textContent = r.name;
+  document.getElementById('hdr-role').textContent = r.name;
+
+  // Skills display
+  renderSkills();
+  updateCareer();
+  updateStats();
+
+  // Start clock
+  const msPerSimMin = (G.sessionDurationMin * 60000) / 600;
+  G.clockInterval = setInterval(() => {
+    G.simMinute++;
+    if (G.simMinute >= 600) { endDay(); return; }
+    updateClock();
+    checkSLAs();
+  }, msPerSimMin);
+
+  // Spawn tickets
+  spawnTicketsForTime();
+  G.ticketSpawnCheck = setInterval(() => spawnTicketsForTime(), 5000);
+
+  logEvent(getSimTime(), '🟢 Journée démarrée', 'good');
+  showToast('🌅', 'Bonne journée !', `Vous êtes ${r.name}. La file d'attente se remplit.`);
+}
+
+function getSimTime() {
+  const h = Math.floor(G.simMinute / 60) + 8;
+  const m = G.simMinute % 60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+
+function updateClock() {
+  document.getElementById('clock').textContent = getSimTime();
+}
+
+function spawnTicketsForTime() {
+  TICKET_LIBRARY.forEach(tpl => {
+    if (!tpl.roles[G.role]) return;
+    const simHour = G.simMinute / 60;
+    const targetHour = tpl.hour - 8; // convert to 0-based
+    // Spawn in a window
+    if (Math.abs(simHour - targetHour) < 0.5) {
+      // Check not already in queue
+      if (!G.queue.find(q => q.id === tpl.id)) {
+        addToQueue(tpl);
+      }
+    }
+  });
+}
+
+function addToQueue(tpl) {
+  const item = {
+    id: tpl.id, ref: tpl.ref, title: tpl.title,
+    prio: tpl.prio, cat: tpl.cat,
+    slaTotal: tpl.sla,
+    slaRemaining: tpl.sla,
+    spawnSim: G.simMinute,
+    status: 'waiting', // waiting, active, resolved
+    tpl: tpl
+  };
+  G.queue.push(item);
+  renderQueue();
+
+  // P1 interrupt
+  if (tpl.prio === 1 && G.activeTicket && G.activeTicket.id !== item.id) {
+    showInterruptBanner(item);
+  } else if (!G.activeTicket) {
+    showToast(tpl.prio === 1 ? '🚨':'📨', `Nouveau ticket ${tpl.ref}`, tpl.title);
+  }
+  updateStats();
+}
+
+function renderQueue() {
+  const el = document.getElementById('ticket-queue');
+  const waiting = G.queue.filter(q => q.status !== 'resolved');
+  document.getElementById('queue-count').textContent = waiting.length;
+
+  el.innerHTML = '';
+  [...waiting].sort((a,b) => a.prio - b.prio).forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'ticket-item' + (G.activeTicket && G.activeTicket.id === item.id ? ' active' : '');
+    // prio color
+    const pc = ['','#ef4444','#f59e0b','#3b82f6','#888'][item.prio];
+    div.style.setProperty('--prio-c', pc);
+
+    const pct = item.slaRemaining / item.slaTotal;
+    let slaClass = '', slaText = formatSLA(item.slaRemaining);
+    if (pct < 0.2) { slaClass = 'breach'; div.classList.add('sla-breach'); }
+    else if (pct < 0.4) { slaClass = 'warn'; div.classList.add('sla-warn'); }
+
+    div.innerHTML = `
+      <div class="ti-ref"><span>${item.ref}</span><span class="ti-sla ${slaClass}">${slaText}</span></div>
+      <div class="ti-title">${item.title}</div>
+      <div class="ti-meta">
+        <span class="ti-tag tag-p${item.prio}">P${item.prio}</span>
+        <span class="ti-tag" style="background:var(--surface3);color:var(--text3)">${item.cat}</span>
+      </div>`;
+    div.onclick = () => openTicket(item);
+    el.appendChild(div);
+  });
+}
+
+function formatSLA(min) {
+  if (min <= 0) return 'BREACH';
+  if (min >= 60) return `${Math.floor(min/60)}h${String(min%60).padStart(2,'0')}`;
+  return `${min}min`;
+}
+
+function checkSLAs() {
+  const msPerSimMin = (G.sessionDurationMin * 60000) / 600;
+  G.queue.filter(q => q.status === 'waiting').forEach(item => {
+    // SLA decreases in real sim minutes relative to session duration
+    item.slaRemaining = item.slaTotal - (G.simMinute - item.spawnSim);
+    if (item.slaRemaining <= 0 && item.status === 'waiting') {
+      item.slaRemaining = 0;
+      G.slaBreached++;
+      G.score -= 5;
+      G.xp = Math.max(0, G.xp - 10);
+      logEvent(getSimTime(), `⚠️ SLA dépassé ${item.ref}`, 'bad');
+      showToast('⏰', 'SLA dépassé !', `${item.ref} — ${item.title}`);
+    }
+  });
+  renderQueue();
+  updateStats();
+  updateSLABar();
+}
+
+function updateSLABar() {
+  const total = G.slaOk + G.slaBreached;
+  const pct = total === 0 ? 100 : Math.round(G.slaOk / total * 100);
+  const el = document.getElementById('s-sla-ok');
+  el.textContent = pct + '%';
+  el.className = 'stat-val ' + (pct >= 90 ? 'green' : pct >= 70 ? 'amber' : 'red');
+}
+
+function openTicket(item) {
+  if (item.status === 'resolved') return;
+  G.activeTicket = item;
+  item.status = 'active';
+  G.currentStep = 0;
+
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('ticket-work').style.display = 'flex';
+
+  document.getElementById('tw-ref').textContent = item.ref;
+  document.getElementById('tw-title').textContent = item.title;
+  document.getElementById('s-active-ticket').textContent = item.ref;
+
+  const prioEl = document.getElementById('tw-prio');
+  const prioColors = ['','#ef4444','#f59e0b','#3b82f6','#888'];
+  prioEl.innerHTML = `<span class="ti-tag tag-p${item.prio}" style="font-size:0.65rem">P${item.prio}</span>`;
+
+  document.getElementById('chat-messages').innerHTML = '';
+  renderQueue();
+  renderStep();
+  logEvent(getSimTime(), `📂 Ouvert: ${item.ref}`, '');
+}
+
+function renderStep() {
+  const item = G.activeTicket;
+  if (!item) return;
+  const roleData = item.tpl.roles[G.role];
+  const step = roleData.steps[G.currentStep];
+  if (!step) { resolveTicket(); return; }
+
+  // NPC speaks first
+  if (step.npc_text) {
+    const npcBubble = G.role === 'mgr' ? 'b-mgr' : 'b-user';
+    addMsg('npc', step.npc_icon || '👤', step.npc_name || 'Utilisateur', step.npc_text, npcBubble);
+  }
+
+  // Context
+  addMsg('sys', '📋', null, step.context, 'b-sys');
+
+  // Choices
+  setTimeout(() => renderChoices(step), 300);
+}
+
+function renderChoices(step) {
+  const grid = document.getElementById('choices-grid');
+  grid.innerHTML = '';
+  const keys = ['A','B','C','D'];
+  step.choices.forEach((ch, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.innerHTML = `<span class="ckey">${keys[i]}</span>${ch.t}`;
+    btn.onclick = () => choose(i);
+    grid.appendChild(btn);
+  });
+}
+
+function choose(idx) {
+  const step = G.activeTicket.tpl.roles[G.role].steps[G.currentStep];
+  const ch = step.choices[idx];
+
+  document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+  document.getElementById('choices-grid').innerHTML = '';
+
+  const r = ROLE_DEFS[G.role];
+  const bubble = G.role === 'mgr' ? 'b-mgr' : 'b-tech';
+  const msgEl = addMsg('player', r.icon, 'Vous', ch.t, bubble);
+
+  // Feedback
+  setTimeout(() => {
+    const fbClass = {good:'fb-good',ok:'fb-ok',bad:'fb-bad'}[ch.q];
+    const fb = document.createElement('div');
+    fb.className = `fb-block ${fbClass}`;
+    fb.textContent = ch.fb || ch.feedback || '';
+    msgEl.querySelector('.msg-bubble').appendChild(fb);
+
+    const pts = ch.s === 3 ? '+3 pts' : ch.s === 2 ? '+2 pts' : ch.s === 1 ? '+1 pt' : '+0 pt';
+    const xpGain = ch.s * 8;
+    const ptsEl = document.createElement('div');
+    ptsEl.className = `pts-pop pts-${ch.q}`;
+    ptsEl.textContent = `${pts} · +${xpGain} XP`;
+    msgEl.querySelector('.msg-body').appendChild(ptsEl);
+
+    // Update score/xp
+    G.score += ch.s;
+    G.xp += xpGain;
+    if (ch.q === 'good') { G.csat = Math.min(5, G.csat + 0.1); }
+    else if (ch.q === 'bad') { G.csat = Math.max(1, G.csat - 0.2); }
+
+    // Skills
+    const roleData = G.activeTicket.tpl.roles[G.role];
+    if (roleData.skills) {
+      Object.entries(roleData.skills).forEach(([k,v]) => {
+        if (ch.q === 'good') G.skills[k] = Math.min(100, G.skills[k] + v * 2);
+        else if (ch.q === 'ok') G.skills[k] = Math.min(100, G.skills[k] + v);
+      });
+    }
+
+    checkLevelUp();
+    updateCareer();
+    updateStats();
+
+    // NPC reply
+    if (step.reply) {
+      const replyText = step.reply[ch.q] || step.reply.ok;
+      if (replyText) {
+        setTimeout(() => {
+          showTyping(step.npc_icon || '👤', () => {
+            addMsg('npc', step.npc_icon || '👤', step.npc_name || '—', replyText,
+              G.role === 'n2' ? 'b-tech' : 'b-user');
+            G.currentStep++;
+            setTimeout(() => renderStep(), 500);
+          });
+        }, 600);
+        return;
+      }
+    }
+    G.currentStep++;
+    setTimeout(() => renderStep(), 600);
+  }, 350);
+}
+
+function resolveTicket() {
+  const item = G.activeTicket;
+  item.status = 'resolved';
+  G.resolved++;
+  G.slaOk++;
+  G.xp += 20;
+  G.score += 5;
+
+  addMsg('sys', '✅', null, `Ticket ${item.ref} résolu. +20 XP +5 pts`, 'b-info');
+  logEvent(getSimTime(), `✅ Résolu: ${item.ref}`, 'good');
+
+  setTimeout(() => {
+    G.activeTicket = null;
+    document.getElementById('ticket-work').style.display = 'none';
+    document.getElementById('empty-state').style.display = 'flex';
+    document.getElementById('s-active-ticket').textContent = '—';
+    renderQueue();
+    updateStats();
+    checkLevelUp();
+
+    const remaining = G.queue.filter(q => q.status === 'waiting');
+    if (remaining.length > 0) {
+      showToast('📨', `${remaining.length} ticket(s) en attente`, 'Sélectionnez le prochain ticket.');
+    }
+  }, 1500);
+}
+
+function showInterruptBanner(item) {
+  const old = document.querySelector('.interrupt-banner');
+  if (old) old.remove();
+
+  const banner = document.createElement('div');
+  banner.className = 'interrupt-banner';
+  banner.innerHTML = `🚨 INTERRUPTION P1 — ${item.ref} : ${item.title} — Cliquez pour traiter immédiatement`;
+  banner.onclick = () => { banner.remove(); openTicket(item); };
+
+  const wa = document.getElementById('work-area');
+  wa.insertBefore(banner, wa.firstChild);
+  logEvent(getSimTime(), `🚨 P1 reçu: ${item.ref}`, 'bad');
+}
+
+function addMsg(type, icon, who, text, bubbleClass) {
+  const chat = document.getElementById('chat-messages');
+  const isRight = type === 'player';
+  const isCenter = type === 'sys';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'msg' + (isRight ? ' right' : '') + (isCenter ? ' center' : '');
+
+  if (isCenter) {
+    const b = document.createElement('div');
+    b.className = `msg-bubble ${bubbleClass}`;
+    b.textContent = text;
+    wrap.appendChild(b);
+  } else {
+    const av = document.createElement('div');
+    av.className = 'msg-av';
+    av.textContent = icon;
+
+    const body = document.createElement('div');
+    body.className = 'msg-body';
+
+    if (who) {
+      const w = document.createElement('div');
+      w.className = 'msg-who';
+      w.textContent = who;
+      body.appendChild(w);
+    }
+
+    const b = document.createElement('div');
+    b.className = `msg-bubble ${bubbleClass}`;
+    b.textContent = text;
+    body.appendChild(b);
+
+    wrap.appendChild(av);
+    wrap.appendChild(body);
+  }
+
+  chat.appendChild(wrap);
+  chat.scrollTop = chat.scrollHeight;
+  return wrap;
+}
+
+function showTyping(icon, cb) {
+  const chat = document.getElementById('chat-messages');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg';
+  wrap.innerHTML = `<div class="msg-av">${icon}</div>
+    <div class="msg-body"><div class="msg-bubble b-user"><div class="typing-dots">
+      <div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>
+    </div></div></div>`;
+  chat.appendChild(wrap);
+  chat.scrollTop = chat.scrollHeight;
+  setTimeout(() => { wrap.remove(); cb(); }, 900);
+}
+
+function renderSkills() {
+  const el = document.getElementById('skills-list');
+  el.innerHTML = '';
+  SKILLS_DEF.forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'skill-row';
+    const stars = Math.min(5, Math.floor(G.skills[s.key] / 20));
+    const starStr = '★'.repeat(stars) + '☆'.repeat(5-stars);
+    row.innerHTML = `
+      <div class="skill-name">${s.name}</div>
+      <div class="skill-stars" style="color:${s.color}">${starStr}</div>`;
+    el.appendChild(row);
+  });
+}
+
+function updateCareer() {
+  let lvl = LEVELS[0];
+  for (let i = LEVELS.length-1; i >= 0; i--) {
+    if (G.xp >= LEVELS[i].xp) { lvl = LEVELS[i]; G.level = lvl.lvl; break; }
+  }
+  const nextLvl = LEVELS[G.level] || LEVELS[LEVELS.length-1];
+  const pct = ((G.xp - lvl.xp) / (nextLvl.xp - lvl.xp) * 100) || 0;
+
+  document.getElementById('cc-level').innerHTML = `${G.level} <span>/ 10</span>`;
+  document.getElementById('cc-title').textContent = lvl.title;
+  document.getElementById('cc-xp-bar').style.width = Math.min(100, pct) + '%';
+  document.getElementById('cc-xp-next').textContent = `${G.xp} / ${nextLvl.xp} XP`;
+  document.getElementById('xp-bar').style.width = Math.min(100, pct) + '%';
+  document.getElementById('xp-pts').textContent = G.xp + ' XP';
+  document.getElementById('xp-label').textContent = 'Niveau ' + G.level;
+
+  renderSkills();
+}
+
+function checkLevelUp() {
+  const prevLevel = G.level;
+  let newLvl = LEVELS[0];
+  for (let i = LEVELS.length-1; i >= 0; i--) {
+    if (G.xp >= LEVELS[i].xp) { newLvl = LEVELS[i]; break; }
+  }
+  if (newLvl.lvl > prevLevel) {
+    G.level = newLvl.lvl;
+    showLevelUp(newLvl);
+  }
+}
+
+function showLevelUp(lvl) {
+  document.getElementById('lu-emoji').textContent = lvl.emoji;
+  document.getElementById('lu-title').textContent = `Niveau ${lvl.lvl} !`;
+  document.getElementById('lu-new-title').textContent = lvl.title;
+  document.getElementById('lu-unlock').textContent = `Débloqué : ${lvl.unlock}`;
+  document.getElementById('levelup-overlay').classList.add('show');
+  logEvent(getSimTime(), `🎓 Niveau ${lvl.lvl}: ${lvl.title}`, 'good');
+}
+function closeLevelUp() {
+  document.getElementById('levelup-overlay').classList.remove('show');
+}
+
+function updateStats() {
+  document.getElementById('s-resolved').textContent = G.resolved;
+  document.getElementById('s-pending').textContent = G.queue.filter(q => q.status === 'waiting').length;
+  document.getElementById('s-score').textContent = G.score + ' pts';
+  const csatStars = '★'.repeat(Math.round(G.csat)) + '☆'.repeat(5 - Math.round(G.csat));
+  document.getElementById('s-csat').textContent = csatStars;
+  updateSLABar();
+}
+
+function logEvent(time, text, type) {
+  const log = document.getElementById('events-log');
+  const div = document.createElement('div');
+  div.className = 'event-entry';
+  div.innerHTML = `<span class="ev-time">${time}</span><span class="ev-text ${type}">${text}</span>`;
+  log.insertBefore(div, log.firstChild);
+  if (log.children.length > 50) log.removeChild(log.lastChild);
+}
+
+let toastTimeout;
+function showToast(icon, title, msg) {
+  document.getElementById('t-icon').textContent = icon;
+  document.getElementById('t-title').textContent = title;
+  document.getElementById('t-msg').textContent = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+function updateSLATimerDisplay() {
+  if (!G.activeTicket) return;
+  const item = G.activeTicket;
+  const el = document.getElementById('tw-sla');
+  const pct = item.slaRemaining / item.slaTotal;
+  el.textContent = `SLA: ${formatSLA(item.slaRemaining)}`;
+  el.className = 'sla-timer' + (pct < 0.2 ? ' breach' : pct < 0.4 ? ' warn' : '');
+}
+
+function endDay() {
+  clearInterval(G.clockInterval);
+  clearInterval(G.ticketSpawnCheck);
+  showScreen('s-endday');
+
+  const pct = Math.min(100, Math.round(G.score / Math.max(1, G.resolved * 8 + TICKET_LIBRARY.filter(t=>t.roles[G.role]).length * 3) * 100));
+  const lvl = LEVELS.find(l => l.lvl === G.level);
+  const r = ROLE_DEFS[G.role];
+
+  document.getElementById('ed-icon').textContent = G.score > 50 ? '🏆' : G.score > 25 ? '✅' : '⚠️';
+  document.getElementById('ed-title').textContent = 'Fin de journée · ' + r.name;
+  document.getElementById('ed-subtitle').textContent = `${getSimTime()} — ${lvl ? lvl.title : 'Stagiaire'}`;
+
+  document.getElementById('ed-metrics').innerHTML = `
+    <div class="ed-metric"><div class="ed-mv" style="color:var(--green)">${G.resolved}</div><div class="ed-ml">Tickets résolus</div></div>
+    <div class="ed-metric"><div class="ed-mv" style="color:var(--blue)">${G.xp}</div><div class="ed-ml">XP gagnés</div></div>
+    <div class="ed-metric"><div class="ed-mv" style="color:var(--amber)">${G.slaBreached}</div><div class="ed-ml">SLA dépassés</div></div>
+    <div class="ed-metric"><div class="ed-mv" style="color:var(--purple)">${G.level}</div><div class="ed-ml">Niveau final</div></div>
+  `;
+
+  const rows = document.getElementById('ed-skill-rows');
+  rows.innerHTML = '';
+  SKILLS_DEF.forEach(s => {
+    const v = G.skills[s.key];
+    const div = document.createElement('div');
+    div.className = 'ed-skill-row';
+    div.innerHTML = `
+      <div class="ed-skill-name">${s.name}</div>
+      <div class="ed-skill-bar"><div class="ed-skill-fill" style="width:0%;background:${s.color}" data-val="${v}"></div></div>
+      <div class="ed-skill-val">${v}%</div>`;
+    rows.appendChild(div);
+  });
+  setTimeout(() => {
+    document.querySelectorAll('.ed-skill-fill').forEach(el => {
+      el.style.width = el.dataset.val + '%';
+    });
+  }, 100);
+
+  let analysis = '';
+  if (G.slaBreached > 2) analysis += 'Plusieurs SLA dépassés — travaillez la gestion des priorités (matrice Urgence × Impact ITIL). ';
+  if (G.skills.qualification < 30) analysis += 'Qualification insuffisante — pratiquez la méthode QQOQCP pour collecter les informations initiales. ';
+  if (G.skills.communication < 30) analysis += 'Communication à développer — ITIL insiste sur la transparence et les mises à jour régulières aux utilisateurs. ';
+  if (G.resolved === 0) analysis += 'Aucun ticket résolu — prenez les tickets dans la file d\'attente pour pratiquer. ';
+  if (!analysis) analysis = `Excellente journée ! Niveau ${G.level} atteint avec ${G.xp} XP. Continuez à pratiquer pour maîtriser tous les scénarios et atteindre le niveau Expert DSI.`;
+
+  document.getElementById('ed-analysis-text').textContent = analysis;
+}
+
+function resetGame() {
+  clearInterval(G.clockInterval);
+  clearInterval(G.ticketSpawnCheck);
+  G = {
+    role: null, sessionDurationMin: 30, started: false,
+    simMinute: 0, clockInterval: null, ticketSpawnCheck: null, slaInterval: null,
+    queue: [], activeTicket: null, currentStep: 0,
+    xp: 0, level: 1, score: 0, resolved: 0, slaBreached: 0, slaOk: 0, csat: 5.0,
+    skills: { qualification:0, diagnostic:0, communication:0, procedure:0, securite:0 },
+    pendingInterrupt: null
+  };
+  document.querySelectorAll('.role-tile').forEach(t => t.classList.remove('sel'));
+  document.getElementById('btn-launch').disabled = true;
+  showScreen('s-intro');
+}
+</script>
+</body>
+</html>
